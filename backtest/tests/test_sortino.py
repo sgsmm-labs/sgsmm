@@ -57,23 +57,26 @@ def test_sortino_positive_for_good_strategy():
     assert not math.isnan(ratio)
 
 
-def test_sortino_higher_than_sharpe_when_skewed():
+def test_sortino_differs_from_sharpe_when_skewed():
     """
     For a left-skewed positive-mean series, Sortino should differ from Sharpe.
     This sanity-checks that we're measuring downside-only volatility.
     """
-    np.random.seed(7)
+    rng = np.random.default_rng(7)
     # Build a series with positive mean but occasional large drawdowns
-    returns = pd.Series(np.concatenate([
-        np.random.normal(0.003, 0.005, 200),  # mostly positive
-        np.full(20, -0.02),                    # 20 large drawdown events
-    ]))
-    np.random.shuffle(returns.values)
+    raw = np.concatenate([
+        rng.normal(0.003, 0.005, 200),  # mostly positive
+        np.full(20, -0.02),              # 20 large drawdown events
+    ])
+    rng.shuffle(raw)
+    returns = pd.Series(raw)
     sortino = sortino_ratio(returns, cadence="hourly", min_observations=20)
     sharpe = (returns.mean() / returns.std()) * ANNUALIZATION["hourly"]
-    # Sortino can differ either way depending on skew; here we just check it's finite
+    # Both should be finite for this series
     assert not math.isnan(sortino)
     assert not math.isnan(sharpe)
+    # And measurably different (Sortino isolates only downside)
+    assert sortino != sharpe
 
 
 def test_rolling_sortino_window_smaller_than_series():

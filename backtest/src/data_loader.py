@@ -121,11 +121,30 @@ def cache_logs_to_parquet(logs: list[dict], path: Path) -> None:
     logger.info(f"Cached {len(logs)} logs → {path}")
 
 
-# Event topic0 hashes — precomputed via keccak256 of canonical signature strings.
-# These are kept inline for the backtest harness. Verify against on-chain ABI before use.
-EVENT_TOPICS = {
-    # Aave V3 IPool (Lendle) — verified canonical signatures
-    "Supply": "0x2b627736bca15cd5381dcf80b0bf6f95d2ac84e9e1a83f5c0c1c0c1c0c1c0c1c",  # placeholder — verify!
-    # NOTE: actual topic hashes must be computed via web3.keccak or pulled from a verified ABI.
-    # See notebook 01_data_pull.ipynb where we resolve topics via eth_abi.
+# Event signature strings — resolve topic0 via keccak256 at runtime
+# (avoid hardcoding hashes that may be wrong; see notebooks/01_data_pull.ipynb).
+EVENT_SIGNATURES: dict[str, str] = {
+    # Lendle (Aave V3 fork) — IPool
+    "Supply": "Supply(address,address,address,uint256,uint16)",
+    "Borrow": "Borrow(address,address,address,uint256,uint8,uint256,uint16)",
+    "Repay": "Repay(address,address,address,uint256,bool)",
+    "LiquidationCall": "LiquidationCall(address,address,address,uint256,uint256,address,bool)",
+    # Agni Finance (Uniswap V3 fork) — Factory + Pool
+    "PoolCreated": "PoolCreated(address,address,uint24,int24,address)",
+    "Swap_V3": "Swap(address,address,int256,int256,uint160,uint128,int24)",
+    "Mint_V3": "Mint(address,address,int24,int24,uint128,uint256,uint256)",
+    "Burn_V3": "Burn(address,int24,int24,uint128,uint256,uint256)",
+    # Merchant Moe (Liquidity Book v2.2)
+    "LBPairCreated": "LBPairCreated(address,address,uint256,uint256)",
+    # L1StandardBridge (Ethereum mainnet → Mantle)
+    "ETHBridgeInitiated": "ETHBridgeInitiated(address,address,uint256,bytes)",
 }
+
+
+def topic0(event_name: str) -> str:
+    """Resolve topic0 (32-byte keccak hash) for a known event signature."""
+    from eth_utils import keccak
+
+    if event_name not in EVENT_SIGNATURES:
+        raise KeyError(f"Unknown event {event_name!r}; known: {sorted(EVENT_SIGNATURES)}")
+    return "0x" + keccak(text=EVENT_SIGNATURES[event_name]).hex()

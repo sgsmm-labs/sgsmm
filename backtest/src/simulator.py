@@ -84,23 +84,19 @@ def run_backtest(
     """
     cfg = config or ClassifierConfig()
 
+    # Capital partition per spec:
+    #   60% USDY treasury floor (always-on yield)
+    #   30% sleeve deployable pool (room to mirror up to sleeve_total_cap = 40%, but
+    #     the 10% gap is funded by the reserve buffer in a stress scenario)
+    #   10% reserve buffer (never deployed)
+    # Sleeve starts at 0 deployed; deployable headroom = 30%.
+    floor_share = 1.0 - cfg.sleeve_total_cap - cfg.reserve_buffer + 0.10  # = 0.60
     state = SimState(
         nav=initial_nav,
-        floor_value=initial_nav * (1 - cfg.sleeve_total_cap - cfg.reserve_buffer + cfg.reserve_buffer),
-        # ^ 60% floor; 40% sleeve reserved; 10% reserve buffer carve-out from sleeve.
-        # Effective: 60% floor, 30% deployable sleeve, 10% reserve buffer.
+        floor_value=initial_nav * floor_share,
         sleeve_value=0.0,
         reserve_value=initial_nav * cfg.reserve_buffer,
     )
-    # Reconcile: floor = 60%, reserve = 10%, deployable sleeve starts at 30% liquid
-    state.floor_value = initial_nav * (1 - cfg.sleeve_total_cap - cfg.reserve_buffer)
-    # Wait — spec says: 60% floor / 40% sleeve / 10% reserve buffer. Total > 100%.
-    # Resolution: the 10% reserve is CARVED OUT of vault before split.
-    # Effective allocation: 60% floor + 30% deployable sleeve + 10% reserve = 100%.
-    state.floor_value = initial_nav * 0.60
-    state.sleeve_value = 0.0  # starts empty, can grow up to 30% of NAV
-    state.reserve_value = initial_nav * 0.10
-    deployable_sleeve_cap = 0.30  # spec compromise; tighter than spec sleeve_total_cap=0.40
 
     floor_epoch_return = _floor_apy_per_epoch(floor_annual_apy, epoch_hours)
 
