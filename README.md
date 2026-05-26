@@ -26,7 +26,7 @@ ERC-8004 agent identity NFT logs every decision on-chain. Independent observers 
 
 ## Status
 
-Day 1 of 15. Pre-scaffold phase: gate verification + backtest harness.
+Pre-scaffold phase: gate verification + backtest harness in progress.
 
 ## License
 
