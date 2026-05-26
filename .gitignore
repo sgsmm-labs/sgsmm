@@ -20,14 +20,17 @@ venv/
 .ruff_cache/
 .ipynb_checkpoints/
 
-# Node
+# Node (workspace + nested)
 node_modules/
+**/node_modules/
 .next/
+**/.next/
 .turbo/
 out/
 dist/
 *.tsbuildinfo
 .npm/
+.pnpm-store/
 
 # Foundry
 cache/

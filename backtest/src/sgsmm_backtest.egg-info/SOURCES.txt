@@ -1,0 +1,15 @@
+README.md
+pyproject.toml
+src/__init__.py
+src/classifier.py
+src/data_loader.py
+src/simulator.py
+src/sortino.py
+src/universe.py
+src/sgsmm_backtest.egg-info/PKG-INFO
+src/sgsmm_backtest.egg-info/SOURCES.txt
+src/sgsmm_backtest.egg-info/dependency_links.txt
+src/sgsmm_backtest.egg-info/requires.txt
+src/sgsmm_backtest.egg-info/top_level.txt
+tests/test_classifier.py
+tests/test_sortino.py

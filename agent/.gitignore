@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local env
+.env
+.env.local
+
+# Build artifacts
+*.egg-info/
+build/
+dist/
+
+# Editor
+.vscode/
+.idea/
