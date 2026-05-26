@@ -124,7 +124,14 @@ def cache_logs_to_parquet(logs: list[dict], path: Path) -> None:
 # Event signature strings — resolve topic0 via keccak256 at runtime
 # (avoid hardcoding hashes that may be wrong; see notebooks/01_data_pull.ipynb).
 EVENT_SIGNATURES: dict[str, str] = {
-    # Lendle (Aave V3 fork) — IPool
+    # Lendle (Aave V2 fork on Mantle — uses Deposit/Withdraw, not V3 Supply)
+    # V2 events
+    "Deposit_V2": "Deposit(address,address,address,uint256,uint16)",
+    "Withdraw_V2": "Withdraw(address,address,address,uint256)",
+    "Borrow_V2": "Borrow(address,address,address,uint256,uint256,uint256,uint16)",
+    "Repay_V2": "Repay(address,address,address,uint256)",
+    "LiquidationCall_V2": "LiquidationCall(address,address,address,uint256,uint256,address,bool)",
+    # V3 events (kept for Aave V3 forks like Init Capital if they emit V3 style)
     "Supply": "Supply(address,address,address,uint256,uint16)",
     "Borrow": "Borrow(address,address,address,uint256,uint8,uint256,uint16)",
     "Repay": "Repay(address,address,address,uint256,bool)",
@@ -136,6 +143,7 @@ EVENT_SIGNATURES: dict[str, str] = {
     "Burn_V3": "Burn(address,int24,int24,uint128,uint256,uint256)",
     # Merchant Moe (Liquidity Book v2.2)
     "LBPairCreated": "LBPairCreated(address,address,uint256,uint256)",
+    "LBPair_Swap": "Swap(address,address,uint24,bytes32,bytes32,uint24,bytes32,bytes32)",
     # L1StandardBridge (Ethereum mainnet → Mantle)
     "ETHBridgeInitiated": "ETHBridgeInitiated(address,address,uint256,bytes)",
 }
