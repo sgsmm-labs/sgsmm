@@ -1,8 +1,11 @@
 # SGSMM — Sortino-Gated Smart Money Mirror
+### Manager Scoring Infrastructure for the Mantle Eco Fund
 
-An autonomous on-chain trading agent on Mantle that mirrors curated smart-money wallet positions, with a rolling-Sortino classifier gating wallet eligibility and a layered vault (USDY treasury floor + capped mirror sleeve + reserve buffer).
+An autonomous on-chain trading agent on Mantle that scores DeFi managers via a rolling-Sortino classifier, routes capital through Mantle-native venues (Lendle, Init Capital, Agni Finance, Merchant Moe), and gives the Mantle Eco Fund real-time on-chain visibility into how managers compound capital. The Sortino-gating layer is the scoring mechanism; agents accrue ERC-8004 reputation in real time.
 
 Submission for **The Turing Test Hackathon 2026** — *Alpha & Data Track / Path B [AI-Driven] Trading Strategy* (sponsored by Mirana Ventures).
+
+> **Disclaimer**: SGSMM has no relationship to Terra's Mirror Protocol (mAssets). SGSMM mirrors **wallet positions on Mantle native protocols**, not synthetic assets.
 
 ## Why "Sortino-Gated"
 
