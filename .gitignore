@@ -19,6 +19,10 @@ venv/
 .mypy_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+*.egg-info/
+**/*.egg-info/
+build/
+dist/
 
 # Node (workspace + nested)
 node_modules/
