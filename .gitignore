@@ -1,0 +1,56 @@
+# Local-only docs (strategy, roadmap, submission drafts — never push)
+docs-private/
+
+# Secrets / API keys
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.python-version
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Node
+node_modules/
+.next/
+.turbo/
+out/
+dist/
+*.tsbuildinfo
+.npm/
+
+# Foundry
+cache/
+out/
+broadcast/
+forge-cache/
+
+# Ponder
+.ponder/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Backtest artifacts (large data, keep local)
+backtest/data/
+backtest/results/
+*.parquet
+*.feather
