@@ -1,0 +1,16 @@
+# Foundry artifacts
+cache/
+out/
+broadcast/
+forge-cache/
+
+# Dependencies (re-installed via `forge install` from foundry.lock)
+lib/
+
+# Local env (NEVER commit private keys)
+.env
+.env.local
+
+# Editor
+.vscode/
+.idea/
