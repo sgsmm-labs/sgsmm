@@ -44,8 +44,9 @@ class SimState:
 
     nav: float
     floor_value: float          # 60% USDY treasury (assumed risk-free yield)
-    sleeve_value: float         # mirror sleeve
-    reserve_value: float        # 10% reserve buffer
+    deployable_value: float     # 30% idle pool available to deploy into the sleeve
+    sleeve_value: float         # mirror sleeve (capital currently deployed in positions)
+    reserve_value: float        # 10% reserve buffer (never deployed except under stress)
     positions: dict[str, Position] = field(default_factory=dict)
     equity_curve: list[tuple[datetime, float]] = field(default_factory=list)
     decisions: list[dict] = field(default_factory=list)
@@ -84,16 +85,18 @@ def run_backtest(
     """
     cfg = config or ClassifierConfig()
 
-    # Capital partition per spec:
+    # Capital partition per spec (must sum to 1.0 so NAV starts at initial_nav):
     #   60% USDY treasury floor (always-on yield)
-    #   30% sleeve deployable pool (room to mirror up to sleeve_total_cap = 40%, but
-    #     the 10% gap is funded by the reserve buffer in a stress scenario)
-    #   10% reserve buffer (never deployed)
-    # Sleeve starts at 0 deployed; deployable headroom = 30%.
-    floor_share = 1.0 - cfg.sleeve_total_cap - cfg.reserve_buffer + 0.10  # = 0.60
+    #   30% sleeve deployable pool (own headroom; mirror can reach the 40% cap by
+    #       dipping the final 10% out of the reserve under stress)
+    #   10% reserve buffer (never deployed except under stress)
+    # Sleeve starts at 0 deployed; deployable headroom = sleeve_total_cap - reserve.
+    deployable_share = cfg.sleeve_total_cap - cfg.reserve_buffer       # 0.40 - 0.10 = 0.30
+    floor_share = 1.0 - deployable_share - cfg.reserve_buffer          # 1 - 0.30 - 0.10 = 0.60
     state = SimState(
         nav=initial_nav,
         floor_value=initial_nav * floor_share,
+        deployable_value=initial_nav * deployable_share,
         sleeve_value=0.0,
         reserve_value=initial_nav * cfg.reserve_buffer,
     )
@@ -126,15 +129,17 @@ def run_backtest(
                 continue
             period_return = float(wallet_row.iloc[0].get("wallet_return_this_epoch", 0.0))
             position.current_value *= 1 + period_return
-            state.sleeve_value += position.current_value - (
-                position.current_value / (1 + period_return)
-            )
 
-        # Re-sync sleeve_value from positions
+        # Re-sync sleeve_value from positions (single source of truth)
         state.sleeve_value = sum(p.current_value for p in state.positions.values())
 
         # Update NAV
-        state.nav = state.floor_value + state.sleeve_value + state.reserve_value
+        state.nav = (
+            state.floor_value
+            + state.deployable_value
+            + state.sleeve_value
+            + state.reserve_value
+        )
 
         # Check vault drawdown freeze
         if state.equity_curve:
@@ -161,6 +166,12 @@ def run_backtest(
                     config=cfg,
                 )
                 if size > 0:
+                    # Fund the entry from the deployable pool first, dipping into the
+                    # reserve only if the pool is exhausted (stress path to the 40% cap).
+                    from_pool = min(size, state.deployable_value)
+                    from_reserve = size - from_pool
+                    state.deployable_value -= from_pool
+                    state.reserve_value -= from_reserve
                     state.positions[wallet] = Position(
                         wallet=wallet,
                         entry_epoch=epoch,
@@ -168,16 +179,15 @@ def run_backtest(
                         entry_price_basis=size,
                         current_value=size,
                     )
-                    # Reduce reserve / floor proportionally
                     state.sleeve_value += size
-                    state.floor_value -= size  # simplification: deploy from floor
             elif action in (
                 EligibilityAction.DEFUND.value,
                 EligibilityAction.EMERGENCY_UNWIND.value,
             ):
                 if wallet in state.positions:
                     closed = state.positions.pop(wallet)
-                    state.floor_value += closed.current_value
+                    # Return realized value to the deployable pool (replenishes headroom).
+                    state.deployable_value += closed.current_value
                     state.sleeve_value -= closed.current_value
 
             state.decisions.append(
@@ -191,7 +201,12 @@ def run_backtest(
             )
 
         # Recompute NAV after actions
-        state.nav = state.floor_value + state.sleeve_value + state.reserve_value
+        state.nav = (
+            state.floor_value
+            + state.deployable_value
+            + state.sleeve_value
+            + state.reserve_value
+        )
         state.equity_curve.append((epoch, state.nav))
 
     return state
