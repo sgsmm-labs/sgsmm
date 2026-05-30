@@ -30,6 +30,15 @@ export default createConfig({
       id: 1,
       rpc: process.env.PONDER_RPC_URL_1 ?? "https://ethereum-rpc.publicnode.com",
     },
+    // Mantle Sepolia testnet — used for SGSMM contract deployment.
+    // Ready for DecisionLog + SGSMMVault once deployed.
+    // TODO(deploy): uncomment contracts below after Sepolia deploy;
+    //               set DECISION_LOG_ADDRESS, DECISION_LOG_START_BLOCK,
+    //               SGSMM_VAULT_ADDRESS, SGSMM_VAULT_START_BLOCK env vars.
+    mantleSepolia: {
+      id: 5003,
+      rpc: process.env.PONDER_RPC_URL_5003 ?? "https://rpc.sepolia.mantle.xyz",
+    },
   },
   contracts: {
     LendlePool: {
