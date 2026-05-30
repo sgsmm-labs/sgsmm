@@ -19,6 +19,7 @@ dependencies = [
     "apscheduler>=3.10",
     "psycopg[binary]>=3.2",
     "sqlalchemy>=2.0",
+    "python-telegram-bot>=21",
 ]
 
 [project.optional-dependencies]
@@ -31,6 +32,7 @@ dev = [
 
 [project.scripts]
 sgsmm-agent = "src.main:run"
+sgsmm-bot = "src.bot:main"
 
 [tool.ruff]
 line-length = 100

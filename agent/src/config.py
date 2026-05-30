@@ -40,6 +40,9 @@ class AgentSettings(BaseSettings):
     pyth_hermes_url: str = Field(default="https://hermes.pyth.network")
     pyth_contract: str = Field(default="0x98046Bd286715D3B0BC227Dd7a956b83D8978603")
 
+    # Telegram demo bot (smart-money tracker — AI Alpha & Data track)
+    telegram_bot_token: str | None = Field(default=None)
+
     # Operational
     rebalance_cadence_hours: int = Field(default=24)
     max_rebalances_per_24h: int = Field(default=3)
