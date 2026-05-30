@@ -61,3 +61,6 @@ backtest/data/
 backtest/results/
 *.parquet
 *.feather
+
+# Throwaway Dune pull/probe scratch scripts (resume tooling, not deliverable)
+backtest/_dune_*.py
