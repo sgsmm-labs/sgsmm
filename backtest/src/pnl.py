@@ -202,7 +202,11 @@ def _value_holdings(
 
 
 def reconstruct_pnl(
-    trades: pd.DataFrame, end_day: pd.Timestamp | None = None
+    trades: pd.DataFrame,
+    end_day: pd.Timestamp | None = None,
+    min_capital_base: float = 10.0,
+    return_floor: float = -0.95,
+    return_cap: float = 1.0,
 ) -> pd.DataFrame:
     """
     Replay every wallet's swaps and emit a per-(wallet, day) panel.
@@ -213,7 +217,18 @@ def reconstruct_pnl(
     - daily_return: Modified-Dietz MTM return on risky holdings (flows = stable
       legs), i.e. the return a mirror of this wallet earns that day. Computed on
       every day in the wallet's active range, including no-trade days (holdings
-      carried forward), so buy-and-hold performance is captured.
+      carried forward), so buy-and-hold performance is captured. Hardened for
+      real on-chain data: the capital base is floored at `min_capital_base` USD
+      (dust denominators otherwise produce astronomically large returns) and the
+      result is winsorized to `[return_floor, return_cap]` so a single mispriced
+      thin-token print can't blow up the sleeve — and the return can never be
+      <= -1, which would drive a mirrored position value negative.
+
+    Args:
+        end_day: last day to mark still-open positions to (default global max).
+        min_capital_base: minimum USD risk-capital base to score a return on;
+            below it the day's return is 0.0 (too little at risk to be signal).
+        return_floor / return_cap: winsorization bounds for the daily return.
     - realized_pnl_usd: FIFO realized PnL booked that day.
     - risky_value_end: USD value of risky holdings at day close.
     - n_trades: swaps executed that day (sample-size signal for the gate).
@@ -291,7 +306,16 @@ def reconstruct_pnl(
             v_end = _value_holdings(current_holdings, prices, day)
             flow = flow_by_day.get(day, 0.0)
             denom = prev_value + 0.5 * flow
-            daily_return = (v_end - prev_value - flow) / denom if denom > 1e-9 else 0.0
+            if denom < min_capital_base:
+                # Too little risk capital to score: dust denominators otherwise
+                # turn a tiny absolute move into a 1e10-scale "return".
+                daily_return = 0.0
+            else:
+                raw_return = (v_end - prev_value - flow) / denom
+                # Winsorize: keeps a single mispriced thin-token MTM print from
+                # blowing up the sleeve, and guarantees return > -1 so a mirrored
+                # position can never be marked to a negative value.
+                daily_return = max(return_floor, min(return_cap, raw_return))
             out_rows.append(
                 {
                     "wallet": wallet,

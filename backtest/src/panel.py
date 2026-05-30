@@ -43,12 +43,35 @@ PANEL_COLUMNS = [
 ]
 
 
-def _rolling_sortino(returns: pd.Series, window_days: int, min_obs: int) -> pd.Series:
-    """Trailing-window Sortino over a daily return series (positional window)."""
-    return returns.rolling(window=window_days, min_periods=min_obs).apply(
-        lambda w: sortino_ratio(pd.Series(w), cadence="daily", min_observations=min_obs),
-        raw=False,
-    )
+def _rolling_sortino(
+    returns: pd.Series,
+    window_days: int,
+    min_obs: int,
+    min_downside_obs: int = 3,
+    cap: float = 10.0,
+) -> pd.Series:
+    """
+    Trailing-window Sortino over a daily return series (positional window).
+
+    Hardened for short/real windows:
+      - require >= `min_downside_obs` negative returns in-window before the ratio
+        is trusted; a Sortino estimated from 0-1 downside samples is statistically
+        meaningless and otherwise explodes to 1e4+ on a recent winning streak
+        (which is what makes the gate chase momentum into a correlated crash);
+      - clip to +/- `cap`: any Sortino well above the entry gate is "excellent",
+        and its exact magnitude is noise that shouldn't propagate downstream.
+    """
+
+    def _one(window: object) -> float:
+        s = pd.Series(window)
+        if int((s < 0).sum()) < min_downside_obs:
+            return float("nan")
+        val = sortino_ratio(s, cadence="daily", min_observations=min_obs)
+        if pd.isna(val):
+            return float("nan")
+        return float(max(-cap, min(cap, val)))
+
+    return returns.rolling(window=window_days, min_periods=min_obs).apply(_one, raw=False)
 
 
 def _rolling_dd(returns: pd.Series, window_days: int) -> pd.Series:
@@ -68,6 +91,8 @@ def build_panel(
     dd_window_days: int = 30,
     obs_window_days: int = 90,
     min_obs_for_sortino: int = 10,
+    min_downside_obs_for_sortino: int = 3,
+    sortino_cap: float = 10.0,
     default_label_score: float = 1.0,
 ) -> pd.DataFrame:
     """
@@ -81,6 +106,12 @@ def build_panel(
         sortino_window_days / dd_window_days / obs_window_days: rolling windows.
         min_obs_for_sortino: minimum daily returns in-window before Sortino is
             defined (NaN below this; classifier then treats the wallet as SKIP).
+        min_downside_obs_for_sortino: minimum in-window negative returns before
+            the Sortino ratio is trusted (NaN below this). Guards against the
+            ratio exploding on a short all-/mostly-winning streak, which would
+            otherwise make the gate chase momentum into a correlated crash.
+        sortino_cap: clip the rolling Sortino to +/- this value; any score well
+            above the entry gate is "excellent" and its exact magnitude is noise.
         default_label_score: P1 pass-through label for unscored wallets.
 
     Returns:
@@ -98,7 +129,13 @@ def build_panel(
         returns = sub.set_index("day")["daily_return"]
         n_trades = sub.set_index("day")["n_trades"]
 
-        rolling_sortino = _rolling_sortino(returns, sortino_window_days, min_obs_for_sortino)
+        rolling_sortino = _rolling_sortino(
+            returns,
+            sortino_window_days,
+            min_obs_for_sortino,
+            min_downside_obs=min_downside_obs_for_sortino,
+            cap=sortino_cap,
+        )
         rolling_obs = n_trades.rolling(window=obs_window_days, min_periods=1).sum()
         rolling_dd_30 = _rolling_dd(returns, dd_window_days)
 
