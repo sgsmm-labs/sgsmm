@@ -66,6 +66,31 @@ def _fmt_pct(value: float | None) -> str:
     return "n/a" if value is None else f"{value * 100:+.1f}%"
 
 
+_SORTINO_CAP = 10.0
+
+
+def _fmt_sortino(value: float | None) -> str:
+    """Sortino with an explicit cap marker (the backtest caps |Sortino| at 10)."""
+    if value is None:
+        return "n/a"
+    try:
+        x = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if x >= _SORTINO_CAP:
+        return "10.00⁺"
+    if x <= -_SORTINO_CAP:
+        return "-10.00"
+    return f"{x:.2f}"
+
+
+def _fmt_dd(value: float | None) -> str:
+    """30-day realized drawdown as a signed-loss percentage (e.g. -33%)."""
+    if value is None:
+        return "n/a"
+    return f"-{value * 100:.0f}%"
+
+
 def _md_escape(text: str) -> str:
     """Escape the few legacy-Markdown metacharacters we echo back (addresses)."""
     for ch in ("_", "*", "`", "["):
@@ -113,12 +138,20 @@ async def cmd_leaderboard(update: Update, _ctx: ContextTypes.DEFAULT_TYPE) -> No
         await update.message.reply_text("No wallets in the current snapshot.")
         return
 
-    lines = ["*🏆 SGSMM Smart-Money Leaderboard*", "_ranked by rolling 90d Sortino_", ""]
+    lines = [
+        "*🏆 SGSMM Smart-Money Leaderboard*",
+        "_ranked by 90d Sortino · capped at 10_",
+        "",
+        "🟢 ENTER · 🔴 EMERGENCY · 🟠 DEFUND · ⚪ SKIP",
+        "_color = verdict · 30d drawdown ≥15% ⇒ 🔴 unwind_",
+        "",
+    ]
     for r in rows:
         emoji = _VERDICT_EMOJI.get(r["verdict"], "")
         lines.append(
             f"{r['rank']}. {_addr_link(r['wallet_address'])} {emoji} "
-            f"Sortino *{r['rolling_90d_sortino']:.2f}* · "
+            f"Sortino *{_fmt_sortino(r['rolling_90d_sortino'])}* · "
+            f"dd *{_fmt_dd(r['realized_dd_30d'])}* · "
             f"ret {_fmt_pct(r['cumulative_return'])} · "
             f"{r['n_observed_positions_90d']} trades"
         )
