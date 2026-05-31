@@ -1,9 +1,7 @@
 import Link from "next/link";
 import Nav from "@/components/Nav";
 import EquityChart from "@/components/EquityChart";
-import { getVault, getLeaderboard, getDecisions, getEquity } from "@/lib/data";
-
-const HACKATHON_URL = "https://devhub.mantle.xyz/";
+import { getVault, getLeaderboard, getEquity } from "@/lib/data";
 
 const principles = [
   {
@@ -32,7 +30,6 @@ function formatNav(v: number) {
 export default function Home() {
   const vault = getVault();
   const leaderboard = getLeaderboard();
-  const decisions = getDecisions();
   const equity = getEquity();
 
   const topSortino = leaderboard[0]?.sortino ?? 0;
