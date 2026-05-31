@@ -1,0 +1,962 @@
+[
+  {
+    "epoch": 26,
+    "wallet": "0x06f98c244b18c50234690da51c1d9c144042373a",
+    "action": "ENTER",
+    "sortino": 3.51,
+    "sleevePctBps": 37,
+    "navAfter": 100475.78
+  },
+  {
+    "epoch": 26,
+    "wallet": "0x4eeec9917f0978d568e890eee27683769d03ba35",
+    "action": "DEFUND",
+    "sortino": -0.14,
+    "sleevePctBps": 0,
+    "navAfter": 100475.78
+  },
+  {
+    "epoch": 26,
+    "wallet": "0x6c5466effd3dcfd60b5dc1f180175247ca66ac6a",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 37,
+    "navAfter": 100475.78
+  },
+  {
+    "epoch": 26,
+    "wallet": "0x6e726745b61c9c78b6259fc550f23490ce9f3a52",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 37,
+    "navAfter": 100475.78
+  },
+  {
+    "epoch": 26,
+    "wallet": "0xf241a59d695ce3ee2803b29a87423d554cd72cee",
+    "action": "ENTER",
+    "sortino": 3.5,
+    "sleevePctBps": 37,
+    "navAfter": 100475.78
+  },
+  {
+    "epoch": 25,
+    "wallet": "0x1206608fdc30925492b9afcd32aea0a9e579a03a",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100310.86
+  },
+  {
+    "epoch": 25,
+    "wallet": "0x36aacafa61747045dd522e1ce9de90425f79fb44",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100310.86
+  },
+  {
+    "epoch": 25,
+    "wallet": "0x4a461f9da1250686139a7f4bee470472252b64cb",
+    "action": "ENTER",
+    "sortino": 2.24,
+    "sleevePctBps": 38,
+    "navAfter": 100310.86
+  },
+  {
+    "epoch": 25,
+    "wallet": "0x58efe9aee1b12053f4c58233b75c319412cb0614",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 38,
+    "navAfter": 100310.86
+  },
+  {
+    "epoch": 25,
+    "wallet": "0x865157a5bae9314623c49b91c377db68970cf5a6",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100310.86
+  },
+  {
+    "epoch": 25,
+    "wallet": "0xa3076eb16ea3489222cf581e0e6dc83fc3de22c6",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 38,
+    "navAfter": 100310.86
+  },
+  {
+    "epoch": 25,
+    "wallet": "0xf28e82108ed0d306381a6bba9111752b50445d75",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100310.86
+  },
+  {
+    "epoch": 24,
+    "wallet": "0x1dbfdd86cce60423fd253c5a99aef842dbba0a4a",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0x2be250612790d1df5ebfea46c2346654cd7a0afa",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 40,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0x368955efb1bf001683cb5f7ab223380caf0b86e5",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 40,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0x4589ac7bc932b8c8e4ea001d44d40d5e4858b808",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.13,
+    "sleevePctBps": 0,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0x5db201ae15f9702f0a0ff9f00b8c1c18355373d0",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 40,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0x8091110790e54379a19e92b4503644789de5afe0",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0x8aa912cd934b13cb61fb4d6764841d37d04655da",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 40,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0x9899f62ecf16b70bffc88677023026c47e48c218",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 40,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0xb86b0dea2b1c1c16e5cae1fb99bc120a3e8e1677",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": -7.62,
+    "sleevePctBps": 0,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0xbbe06ea75813760ae2387276b64b592a4b6ce29f",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0xc36acb716962ccdb62f0d8e02d293edcc6f26dcc",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 40,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0xc59dfc955c26493c3e5ac068a308cb787cce34e6",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 40,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0xdd057c18456bb2ccff113def8c5e3ba210d6a9b4",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 24,
+    "wallet": "0xe849058ced703af30183dd2c7cb19550e96a016d",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 98348.59
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x000000000e86f1e840b28948545b4371c78cd5e7",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 3.02,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x0d66bcf0300d02f4dac6797d011ebab62a3531d1",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x3588e85015e1c2241a6837fc7d65a7bd5592e235",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": -0.12,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x3cf240594175868177321856a65fdfb4d0fd2f1d",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 42,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x4a811fc4150b0dacf5eeb9e826b56279254b7333",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x5aa58f757385650d213b6da878adaadfd5101635",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 5.85,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x63ee2b61d68220c2606d277c0ab02713a7c84cc6",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x64cfe79b038652bf46a887977285ed308aea37f3",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x69389f0b57fb50dc16f641da9e6a71046695cace",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x8edf4060259d36b520ff8a93bba6a81c55715a84",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 1.21,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x98325c702bdc6041e374677c93a91ea7e90e332d",
+    "action": "DEFUND",
+    "sortino": -2.67,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x9ce429bacb747b2f1589e51743025a966fe45027",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0x9fd1233187367d9427f5266142cf5795e5c16a05",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 1.21,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xa913b7666d2b554c6bacd3c4f4875dade813baba",
+    "action": "DEFUND",
+    "sortino": -0.51,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xbb564a7d40f32d2eee00ad1077a600bb1462eec2",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xbf8e9abf771a91350baf0da5bfd6b4e062ef5703",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.43,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xbfaebd2f46c658894884de843d542f723b02f1f0",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xd9dc13f3286c15eba48ff55e9f39020a6b1a8591",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 42,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xe743a49f04f2f77eb2d3b753ae3ad599de8cea84",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 42,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xe854e410fd76aba8ef411724a4624e176aa5408e",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xeff502601706b9d53280d9733c237eafeac3e49e",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xf1024d61120976b0fa3dcebe653af8fe5d8017ab",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 42,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xf7e017b3f61bd3410a3b03d7dad7699fd6780584",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 23,
+    "wallet": "0xfd33e0279c7dc0e46210af313040a8c5558b0e26",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 42,
+    "navAfter": 99184.66
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x23b320d0d951173de53796bd76d54457134f7097",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x26fedeec8661816c3d2aaaab3bc6c8261e8a071b",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 39,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x2ff32bf85c9da423138a4a56733c0da874ce38e8",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x301a111d510702defb8498ba4a2d5c012bcc784c",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x381fb95a4fa5e83367773bd512ed088210626f10",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 39,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x42a77a6b4a4648aa00ca5717cbfa222be3551760",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x49a26f90509fe18441ac466ec9cb0467423f62ea",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 39,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x4eeec9917f0978d568e890eee27683769d03ba35",
+    "action": "DEFUND",
+    "sortino": -0.36,
+    "sleevePctBps": 0,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x5e7cfd66a465eb756297698524298a58fe918997",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x7121c58525134a1171e116cdaefae65cd0225851",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0x995a03296bb86acfd8d5ec403c6e59ddad7d450a",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0xc52e372f83b0ef9e32168f673688f23370b6e316",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 39,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0xc77820eef59629fc8d88154977bc8de8a1b2f4ae",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 39,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0xcaefc3ad6700e0c84366f331b9b0caffc9fb6109",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 39,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0xdd057c18456bb2ccff113def8c5e3ba210d6a9b4",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 39,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 22,
+    "wallet": "0xe49f5c743e10299d46cf02264eabef68a498b7c5",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100424.15
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x1df2fcf0b8c15e692ff9df5efc32506e6544d12d",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 41,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x23b320d0d951173de53796bd76d54457134f7097",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x2e7fe8551847302a76c9c2201b7228fe382d8a82",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 41,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x39afe2176de832be2a5164e5fc91e27d1355c88d",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 41,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x498020622ca0d5de103b7e78e3efe5819d0d28ab",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 41,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x4eeec9917f0978d568e890eee27683769d03ba35",
+    "action": "ENTER",
+    "sortino": 8.11,
+    "sleevePctBps": 41,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x4efe127e2975cf2703d74261298c72b6193a8270",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 41,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x62b4ffcc15802d337ecc4107c44aa5c8c44f2830",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x63e6e2e9dfb7924a016f423e7bc017c4c5f2b01a",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x7e023e436904efb7b08f67c0edd7ce62fbacd7a5",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 41,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x99674177cf8ecb29c466a935d9994ea141a401cf",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0x9bc34ded927e0f336c5c81e15a900461a0608863",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 41,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 21,
+    "wallet": "0xfe8fe2eaefda08bda5c887d1b5fc7d2efc3f7b90",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 41,
+    "navAfter": 100134.6
+  },
+  {
+    "epoch": 20,
+    "wallet": "0x3588e85015e1c2241a6837fc7d65a7bd5592e235",
+    "action": "ENTER",
+    "sortino": 4.17,
+    "sleevePctBps": 47,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 20,
+    "wallet": "0x3f4bef3311893aaa5847a16a7d8cebb74279983c",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 47,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 20,
+    "wallet": "0x48f1142afa03a3b710f63c3d9ff56655a58f7b8d",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 20,
+    "wallet": "0x5797b533ea4ec95cecc83dd146be634202334614",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 20,
+    "wallet": "0x60b82538b8495ce3f96cc03ddfb750661158373d",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 20,
+    "wallet": "0x865157a5bae9314623c49b91c377db68970cf5a6",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 20,
+    "wallet": "0x88744ac774ab4c9d92463a4bbfd97b7e50ab3473",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 20,
+    "wallet": "0xa913b7666d2b554c6bacd3c4f4875dade813baba",
+    "action": "ENTER",
+    "sortino": 3.24,
+    "sleevePctBps": 47,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 20,
+    "wallet": "0xc73535d30934eb9097ad197fbc4fe18d8701bfba",
+    "action": "ENTER",
+    "sortino": 2.01,
+    "sleevePctBps": 47,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 20,
+    "wallet": "0xdeff978201aaef1cdabd5d82914719011887d2fb",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 20,
+    "wallet": "0xe5f52a12a34f684a5179384f0d30331acaff8879",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99983.85
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x0397279515ba8a57a869daa97df4dd7562cbf648",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 4.46,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x107b68ff0be624261d2440d6a2a4ea9cee76ef8d",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x26ff577818a40d1333944b7492e23619303f5d84",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 48,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x3467b24b63931ae59e75505a65670b2b0097c6b3",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": -4.03,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x3e63d819cee7d8d3a73cb5e4dfeee0f164af01f1",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x4eeec9917f0978d568e890eee27683769d03ba35",
+    "action": "DEFUND",
+    "sortino": 0.48,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x5440afc3ef2b0af19c358f9d519657a6cc5909e5",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x7fb1041931a8ca61a7607feb1500265bbd8f0434",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": -6.09,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x889758b37ed75953cadf00dc6f56781c8367ca41",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 10.0,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x8d425c2667e4d13bdb91e3faa2f1f41d148df88f",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": -4.18,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x8d6d447e4d3a527c20eae351ca75191f7fa50cd5",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0x98325c702bdc6041e374677c93a91ea7e90e332d",
+    "action": "DEFUND",
+    "sortino": -0.88,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0xa1c9d41719c4ffd99463f1cfa579d9b6a96b50c6",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0xa913b7666d2b554c6bacd3c4f4875dade813baba",
+    "action": "DEFUND",
+    "sortino": -0.71,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0xb67cd5274b450e23e68874605affd4ec559a69e5",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 48,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0xc0efd9d4b3c7e1f4f8b700c0f939eda9a2b738da",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0xcfa706659d0bbe85ebb5c145a2d9f1c89c76b1c4",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 6.21,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0xd26b76e50f6510cdd4bf45d59279705f36946d23",
+    "action": "ENTER",
+    "sortino": 2.01,
+    "sleevePctBps": 48,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0xe5350e927b904fdb4d2af55c566e269bb3df1941",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0xe67905b3e3d6a20541c60d4ec3dba87386718c5d",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0xf75eca09e6f9684900c28a6969e85b28234b42ad",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 48,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 19,
+    "wallet": "0xf9e8e6e5ba50a3b856862b2ae3f9a3d78286d75c",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99247.53
+  },
+  {
+    "epoch": 18,
+    "wallet": "0x11e0a019207783042644bf6b064f19d5089ab66a",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99065.71
+  },
+  {
+    "epoch": 18,
+    "wallet": "0x16064d4aa19bd06f7dc6579365cbb27f92857b2c",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99065.71
+  },
+  {
+    "epoch": 18,
+    "wallet": "0x2102c32a09cbced4146c3db2d27ae21a185bda43",
+    "action": "ENTER",
+    "sortino": 10.0,
+    "sleevePctBps": 49,
+    "navAfter": 99065.71
+  },
+  {
+    "epoch": 18,
+    "wallet": "0x3467b24b63931ae59e75505a65670b2b0097c6b3",
+    "action": "DEFUND",
+    "sortino": 0.15,
+    "sleevePctBps": 0,
+    "navAfter": 99065.71
+  },
+  {
+    "epoch": 18,
+    "wallet": "0x4e32ce01bd170aa80e30885041af1b56a04ad141",
+    "action": "DEFUND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99065.71
+  },
+  {
+    "epoch": 18,
+    "wallet": "0x596cdbb0d4b74cb5dcdf86613d8012e0cd3e522f",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99065.71
+  },
+  {
+    "epoch": 18,
+    "wallet": "0x650d9ef87fa2a11e0ea4aac943c058e495926603",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 2.13,
+    "sleevePctBps": 0,
+    "navAfter": 99065.71
+  },
+  {
+    "epoch": 18,
+    "wallet": "0x7d82a42dfbc9abab53bb63e1e41237d3fa890571",
+    "action": "EMERGENCY_UNWIND",
+    "sortino": 0.0,
+    "sleevePctBps": 0,
+    "navAfter": 99065.71
+  }
+]

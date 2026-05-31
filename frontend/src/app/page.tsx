@@ -1,13 +1,9 @@
 import Link from "next/link";
+import Nav from "@/components/Nav";
+import EquityChart from "@/components/EquityChart";
+import { getVault, getLeaderboard, getDecisions, getEquity } from "@/lib/data";
 
 const HACKATHON_URL = "https://devhub.mantle.xyz/";
-
-const stats = [
-  { label: "Vault NAV", value: "—", subtext: "Connect to Mantle to load" },
-  { label: "Rolling 90d Sortino", value: "—", subtext: "Sortino-gated entry ≥ 1.5" },
-  { label: "Active Mirrors", value: "0", subtext: "Sleeve cap 40%" },
-  { label: "Decisions Logged", value: "0", subtext: "Cycle 0 / on-chain audit" },
-];
 
 const principles = [
   {
@@ -24,41 +20,58 @@ const principles = [
   },
 ];
 
+function formatNav(v: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(v);
+}
+
 export default function Home() {
+  const vault = getVault();
+  const leaderboard = getLeaderboard();
+  const decisions = getDecisions();
+  const equity = getEquity();
+
+  const topSortino = leaderboard[0]?.sortino ?? 0;
+
+  const stats = [
+    {
+      label: "Vault NAV",
+      value: formatNav(vault.nav),
+      subtext: `+${vault.cumulativeReturn}% cumulative return`,
+    },
+    {
+      label: "Top 90d Sortino",
+      value: topSortino.toFixed(2),
+      subtext: "Sortino-gated entry ≥ 1.5",
+    },
+    {
+      label: "Active Mirrors",
+      value: vault.activeMirrors.toString(),
+      subtext: "Sleeve cap 40% · epoch " + vault.cycleEpoch,
+    },
+    {
+      label: "Decisions Logged",
+      value: vault.totalDecisionsLogged.toLocaleString(),
+      subtext: "Cycle " + vault.cycleEpoch + " · on-chain audit",
+    },
+  ];
+
+  const lastPoint = equity[equity.length - 1];
+  const firstPoint = equity[0];
+  const sgReturn = lastPoint && firstPoint
+    ? (((lastPoint.nav - firstPoint.nav) / firstPoint.nav) * 100).toFixed(2)
+    : "—";
+  const baseReturn = lastPoint && firstPoint
+    ? (((lastPoint.baselineNav - firstPoint.baselineNav) / firstPoint.baselineNav) * 100).toFixed(2)
+    : "—";
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-black text-zinc-100">
-      <header className="border-b border-white/10 backdrop-blur sticky top-0 bg-black/30 z-10">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-cyan-400 to-violet-500" />
-            <div>
-              <p className="text-sm font-semibold tracking-tight">SGSMM</p>
-              <p className="text-[10px] uppercase tracking-widest text-zinc-400">
-                Manager Scoring Infrastructure · Mantle
-              </p>
-            </div>
-          </div>
-          <nav className="flex items-center gap-6 text-sm">
-            <Link href="/vault" className="hover:text-cyan-300">
-              Vault
-            </Link>
-            <Link href="/positions" className="hover:text-cyan-300">
-              Positions
-            </Link>
-            <Link href="/decisions" className="hover:text-cyan-300">
-              Decisions
-            </Link>
-            <a
-              href={HACKATHON_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full bg-cyan-500/10 px-3 py-1.5 text-cyan-300 ring-1 ring-cyan-400/30 hover:bg-cyan-500/20"
-            >
-              The Turing Test
-            </a>
-          </nav>
-        </div>
-      </header>
+      <Nav />
 
       <main className="mx-auto max-w-6xl px-6 pt-16 pb-32">
         <section className="mb-16">
@@ -93,12 +106,29 @@ export default function Home() {
         </section>
 
         <section className="mb-16">
-          <h2 className="mb-6 text-sm font-medium uppercase tracking-widest text-zinc-400">
-            Equity Curve
-          </h2>
-          <div className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-white/10 bg-white/[0.02] text-sm text-zinc-500">
-            Phase 1 backtest output renders here · SGSMM vs naive baseline overlay
+          <div className="mb-4 flex items-baseline justify-between">
+            <h2 className="text-sm font-medium uppercase tracking-widest text-zinc-400">
+              Equity Curve
+            </h2>
+            <div className="flex items-center gap-4 text-xs text-zinc-500">
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-cyan-400" />
+                SGSMM{" "}
+                <span className="text-cyan-300 font-medium">+{sgReturn}%</span>
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="inline-block h-2 w-2 rounded-full bg-violet-500" />
+                Principal{" "}
+                <span className="text-violet-300 font-medium">+{baseReturn}%</span>
+              </span>
+            </div>
           </div>
+          <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 backdrop-blur">
+            <EquityChart data={equity} />
+          </div>
+          <p className="mt-2 text-xs text-zinc-600">
+            26-epoch preliminary window · 300k real Mantle DEX trades · vs. $100k principal floor
+          </p>
         </section>
 
         <section className="mb-16 grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -125,8 +155,14 @@ export default function Home() {
             >
               View Decision Feed
             </Link>
+            <Link
+              href="/positions"
+              className="rounded-full border border-white/20 px-5 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10"
+            >
+              Leaderboard
+            </Link>
             <a
-              href="https://github.com/"
+              href="https://github.com/sgsmm-labs/sgsmm"
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full border border-white/20 px-5 py-2 text-sm font-medium text-zinc-200 hover:bg-white/10"

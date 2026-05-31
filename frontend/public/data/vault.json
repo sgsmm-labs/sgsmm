@@ -1,0 +1,15 @@
+{
+  "nav": 100475.78,
+  "floorPct": 60,
+  "sleevePct": 30,
+  "reservePct": 10,
+  "activeMirrors": 82,
+  "lastRebalance": "2025-12-26T00:00:00Z",
+  "nextRebalance": "2025-12-27T00:00:00Z",
+  "floorAsset": "USDY",
+  "floorVenueLabel": "Lendle / Init Capital",
+  "sleeveVenueLabel": "Agni / Merchant Moe",
+  "cycleEpoch": 26,
+  "totalDecisionsLogged": 7315,
+  "cumulativeReturn": 0.48
+}
