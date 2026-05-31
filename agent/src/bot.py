@@ -21,9 +21,9 @@ from __future__ import annotations
 import sys
 
 from loguru import logger
-from telegram import Update
+from telegram import LinkPreviewOptions, Update
 from telegram.constants import ParseMode
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, ContextTypes, Defaults
 
 from . import bot_data
 from .config import AgentSettings
@@ -47,6 +47,19 @@ def _short_addr(address: str) -> str:
     if len(address) <= 12:
         return address
     return f"{address[:6]}…{address[-4:]}"
+
+
+_EXPLORER = "https://mantlescan.xyz/address/"
+
+
+def _addr_link(address: str, *, full: bool = False) -> str:
+    """Render a wallet as a Markdown link to its Mantle explorer page.
+
+    Only ever called on snapshot-derived (trusted, clean-hex) addresses — never
+    on raw user input — so the label needs no Markdown escaping.
+    """
+    label = address if full else _short_addr(address)
+    return f"[{label}]({_EXPLORER}{address})"
 
 
 def _fmt_pct(value: float | None) -> str:
@@ -104,7 +117,7 @@ async def cmd_leaderboard(update: Update, _ctx: ContextTypes.DEFAULT_TYPE) -> No
     for r in rows:
         emoji = _VERDICT_EMOJI.get(r["verdict"], "")
         lines.append(
-            f"{r['rank']}. `{_short_addr(r['wallet_address'])}` {emoji} "
+            f"{r['rank']}. {_addr_link(r['wallet_address'])} {emoji} "
             f"Sortino *{r['rolling_90d_sortino']:.2f}* · "
             f"ret {_fmt_pct(r['cumulative_return'])} · "
             f"{r['n_observed_positions_90d']} trades"
@@ -138,7 +151,7 @@ async def cmd_wallet(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
 
     emoji = _VERDICT_EMOJI.get(record.get("verdict", ""), "")
     lines = [
-        f"*Wallet* `{_md_escape(record['wallet_address'])}`",
+        f"*Wallet* {_addr_link(record['wallet_address'], full=True)}",
         "",
         f"{emoji} *Verdict:* {record.get('verdict', 'n/a')}",
         f"*90d Sortino:* {record.get('rolling_90d_sortino', 'n/a')}",
@@ -180,7 +193,7 @@ async def cmd_signals(update: Update, _ctx: ContextTypes.DEFAULT_TYPE) -> None:
         lines.append("*Strongest ENTER candidates:*")
         for c in s["top_enter_candidates"]:
             lines.append(
-                f"• `{_short_addr(c['wallet_address'])}` "
+                f"• {_addr_link(c['wallet_address'])} "
                 f"Sortino {c['rolling_90d_sortino']:.2f}"
             )
     lines.append("")
@@ -207,7 +220,7 @@ async def cmd_anomaly(update: Update, _ctx: ContextTypes.DEFAULT_TYPE) -> None:
     for a in rows:
         emoji = _VERDICT_EMOJI.get(a.get("verdict", ""), "🔴")
         lines.append(
-            f"{emoji} `{_short_addr(a['wallet_address'])}` — "
+            f"{emoji} {_addr_link(a['wallet_address'])} — "
             f"DD *{_fmt_pct(a.get('realized_dd_30d'))}* · "
             f"Sortino {a.get('rolling_90d_sortino', 'n/a')}"
         )
@@ -222,7 +235,11 @@ _SNAPSHOT_MISSING = (
 
 def build_application(token: str) -> Application:
     """Wire up the PTB application and command handlers (no network I/O)."""
-    application = Application.builder().token(token).build()
+    defaults = Defaults(
+        parse_mode=ParseMode.MARKDOWN,
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    )
+    application = Application.builder().token(token).defaults(defaults).build()
     application.add_handler(CommandHandler("start", cmd_start))
     application.add_handler(CommandHandler("help", cmd_help))
     application.add_handler(CommandHandler("leaderboard", cmd_leaderboard))
