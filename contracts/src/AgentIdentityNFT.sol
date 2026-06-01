@@ -7,9 +7,28 @@ import {AccessControl} from "@openzeppelin/contracts/access/AccessControl.sol";
 /**
  * @title AgentIdentityNFT
  * @notice Minimal ERC-8004-compatible Identity Registry for autonomous AI agents.
- * @dev Implements the Identity Registry portion of EIP-8004 (Draft) used by the
- *      Mantle Turing Test Hackathon. Each agent mints one NFT representing its
- *      on-chain identity; mutable metadata stores live Sortino + vault NAV.
+ *
+ * @dev ╔══════════════════════════════════════════════════════════════════════╗
+ *      ║  LOCAL DEV STAND-IN — NOT THE CANONICAL ERC-8004 IDENTITY.            ║
+ *      ║                                                                      ║
+ *      ║  On the Mantle Turing Test Hackathon, the ERC-8004 Agent ID is       ║
+ *      ║  ISSUED BY MANTLE. Teams do NOT deploy their own identity registry.  ║
+ *      ║                                                                      ║
+ *      ║  This contract exists ONLY so the testnet demo is self-contained     ║
+ *      ║  (the agent can mint a placeholder id and write live Sortino/NAV     ║
+ *      ║  metadata without depending on an external registry). The            ║
+ *      ║  self-minted NFT here is a stand-in and MUST NOT be presented as     ║
+ *      ║  the canonical agent identity.                                       ║
+ *      ║                                                                      ║
+ *      ║  ON SUBMISSION / MAINNET: the agent references the MANTLE-ISSUED      ║
+ *      ║  agentId, and MirrorExecutor.agentId is set (via                     ║
+ *      ║  MirrorExecutor.setAgentId) to that Mantle ID — this stand-in        ║
+ *      ║  registry is not deployed.                                           ║
+ *      ╚══════════════════════════════════════════════════════════════════════╝
+ *
+ *      Implements the Identity Registry portion of EIP-8004 (Draft). Each agent
+ *      mints one NFT representing its on-chain identity; mutable metadata stores
+ *      live Sortino + vault NAV.
  *
  *      Compliance subset:
  *      - register(agentURI) → mints NFT

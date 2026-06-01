@@ -40,11 +40,22 @@ import {Math} from "@openzeppelin/contracts/utils/math/Math.sol";
  *      on-chain per-position ledger using the *measured* balance delta, never a
  *      caller-asserted figure.
  *
- *      SECURITY / CUSTODY NOTE (C-1, deferred): enterMirror transfers the sleeve
- *      to an `executorRecipient` (the agent EOA / sub-strategy). This custody
- *      model is pending a product decision and is tracked as an open item; the
- *      hardening in this contract bounds and audits that flow but does not
- *      remove the trust placed in the recipient.
+ *      CUSTODY MODEL (C-1 RESOLVED — NO EOA CUSTODY):
+ *        The deployable sleeve is sent ONLY to the `custodian`, a CONTRACT
+ *        address set by governance (DEFAULT_ADMIN_ROLE, intended to be the
+ *        TimelockController). {enterMirror} no longer accepts a caller-supplied
+ *        recipient: funds always go to `custodian` and the call reverts if no
+ *        custodian is configured. The custodian (MirrorExecutor) can only swap
+ *        the sleeve through whitelisted venues or return it here via
+ *        {exitMirror}; it has no path to forward funds to an arbitrary address.
+ *
+ *      HARD CUSTODY INVARIANT (enforced + audited):
+ *        NO function in this vault transfers the asset to `msg.sender` or to any
+ *        caller-supplied address. The only asset OUTFLOW is {enterMirror} ->
+ *        `custodian` (a governance-set contract). The only asset INFLOW from the
+ *        executor is {exitMirror}, which PULLS via transferFrom (the executor
+ *        approves the vault). A compromised EXECUTOR_ROLE key therefore cannot
+ *        redirect vault funds to an address it controls.
  */
 contract SGSMMVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
     using SafeERC20 for IERC20;
@@ -71,6 +82,13 @@ contract SGSMMVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
     ///      unviable by scaling the virtual shares (see OZ ERC4626 docs).
     uint8 private constant DECIMALS_OFFSET = 6;
 
+    /// @notice The ONLY address the deployable sleeve may be sent to on {enterMirror}.
+    /// @dev MUST be a contract (the MirrorExecutor) set by governance via
+    ///      {setCustodian}. There is no caller-supplied recipient anywhere in this
+    ///      contract — this single governance-controlled sink is the sole asset
+    ///      outflow target. Zero until configured; {enterMirror} reverts while zero.
+    address public custodian;
+
     /// @notice Total assets currently deployed to mirror positions (outstanding).
     /// @dev INVARIANT: deployedSleeve == Σ walletExposure[w] == Σ open position principals.
     uint256 public deployedSleeve;
@@ -88,6 +106,9 @@ contract SGSMMVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
     /// @dev Recorded in {enterMirror}, consumed (zeroed) in {exitMirror}. A non-zero
     ///      value means the position is open. exitMirror trusts THIS, not the caller.
     mapping(address => mapping(uint256 => uint256)) public positionPrincipal;
+
+    /// @notice Emitted when governance changes the sleeve custodian contract.
+    event CustodianUpdated(address indexed previousCustodian, address indexed newCustodian);
 
     event MirrorEntered(
         address indexed wallet, uint256 indexed positionId, uint256 amount, uint256 newDeployedSleeve
@@ -108,6 +129,9 @@ contract SGSMMVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
     error NavIsZero();
     error ZeroSharesMinted();
     error PositionNotOpen();
+    error CustodianNotSet();
+    error CustodianNotContract();
+    error ZeroAddress();
 
     constructor(IERC20 asset_, address admin)
         ERC20(
@@ -125,12 +149,33 @@ contract SGSMMVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
         return IERC20(asset()).balanceOf(address(this)) + deployedSleeve;
     }
 
+    /// @notice Governance sets the sole custodian contract that receives the sleeve.
+    /// @dev Gated by DEFAULT_ADMIN_ROLE (the TimelockController on mainnet). Requires
+    ///      a non-zero address with deployed code: the custodian MUST be a contract
+    ///      (the MirrorExecutor) so the sleeve can never be routed to an EOA. This is
+    ///      the only knob that controls where {enterMirror} sends funds, and it is not
+    ///      reachable by EXECUTOR_ROLE — only by governance.
+    function setCustodian(address newCustodian) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (newCustodian == address(0)) revert ZeroAddress();
+        if (newCustodian.code.length == 0) revert CustodianNotContract();
+        address previous = custodian;
+        custodian = newCustodian;
+        emit CustodianUpdated(previous, newCustodian);
+    }
+
     /// @notice Executor pulls capital from the vault to deploy to a mirror position.
     /// @dev Reverts if any policy cap or the retained-liquidity floor would be breached.
     ///      CEI: all accounting state is written before the external asset transfer.
     ///      nonReentrant + whenNotPaused (paused halts new entries).
+    ///
+    ///      CUSTODY: there is NO caller-supplied recipient. The sleeve is sent to the
+    ///      governance-set `custodian` contract and nowhere else. The call reverts
+    ///      with {CustodianNotSet} if governance has not configured a custodian. This
+    ///      removes the C-1 rug where the agent EOA (msg.sender) received the sleeve.
+    /// @param wallet Smart-money wallet this position mirrors.
+    /// @param amount Sleeve size to deploy (bounded by the sizing caps below).
     /// @return positionId The ledger id for this entry; pass it back to {exitMirror}.
-    function enterMirror(address wallet, uint256 amount, address executorRecipient)
+    function enterMirror(address wallet, uint256 amount)
         external
         whenNotPaused
         nonReentrant
@@ -138,6 +183,10 @@ contract SGSMMVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
         returns (uint256 positionId)
     {
         if (amount == 0) revert ZeroAmount();
+
+        // Custody guard: funds may only ever leave to the governance-set custodian.
+        address custodian_ = custodian;
+        if (custodian_ == address(0)) revert CustodianNotSet();
 
         uint256 nav = totalAssets();
         if (nav == 0) revert NavIsZero();
@@ -184,8 +233,9 @@ contract SGSMMVault is ERC4626, AccessControl, Pausable, ReentrancyGuard {
         deployedSleeve = sleeveAfter;
 
         // ---- Interaction ----
-        // Transfer to executor recipient (off-chain agent EOA or sub-strategy contract).
-        IERC20(asset()).safeTransfer(executorRecipient, amount);
+        // Transfer ONLY to the governance-set custodian contract (never to a
+        // caller-chosen address). custodian_ was validated non-zero above.
+        IERC20(asset()).safeTransfer(custodian_, amount);
 
         emit MirrorEntered(wallet, positionId, amount, sleeveAfter);
     }

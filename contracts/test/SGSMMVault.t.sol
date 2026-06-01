@@ -4,15 +4,21 @@ pragma solidity 0.8.26;
 import {Test} from "forge-std/Test.sol";
 import {SGSMMVault} from "../src/SGSMMVault.sol";
 import {MockUSDY} from "./mocks/MockUSDY.sol";
+import {MockCustodian} from "./mocks/MockCustodian.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {Pausable} from "@openzeppelin/contracts/utils/Pausable.sol";
+import {IAccessControl} from "@openzeppelin/contracts/access/IAccessControl.sol";
 
 contract SGSMMVaultTest is Test {
     SGSMMVault internal vault;
     MockUSDY internal usdy;
 
+    /// @dev Contract custodian (mirrors MirrorExecutor's vault-boundary role): it is
+    ///      BOTH the EXECUTOR_ROLE caller and the configured `custodian`, so the
+    ///      sleeve always lands on a CONTRACT (never an EOA) under the new model.
+    MockCustodian internal custodian;
+
     address internal admin = address(0xA11CE);
-    address internal executor = address(0xEEEE);
     address internal alice = address(0xA1);
     address internal wallet1 = address(0xBEEF1);
     address internal wallet2 = address(0xBEEF2);
@@ -20,9 +26,14 @@ contract SGSMMVaultTest is Test {
     function setUp() public {
         usdy = new MockUSDY();
         vault = new SGSMMVault(IERC20(address(usdy)), admin);
+
+        // Deploy the contract custodian and wire it as BOTH executor + custodian.
+        custodian = new MockCustodian(vault);
         bytes32 execRole = vault.EXECUTOR_ROLE();
-        vm.prank(admin);
-        vault.grantRole(execRole, executor);
+        vm.startPrank(admin);
+        vault.grantRole(execRole, address(custodian));
+        vault.setCustodian(address(custodian));
+        vm.stopPrank();
 
         // Seed Alice with 10M USDY and deposit 1M into vault
         usdy.mint(alice, 10_000_000 ether);
@@ -30,6 +41,63 @@ contract SGSMMVaultTest is Test {
         usdy.approve(address(vault), type(uint256).max);
         vault.deposit(1_000_000 ether, alice);
         vm.stopPrank();
+    }
+
+    // ---------------------------------------------------------------------
+    // Custody configuration (C-1): custodian must be a CONTRACT, never an EOA
+    // ---------------------------------------------------------------------
+
+    function test_custodian_is_the_wired_contract() public view {
+        assertEq(vault.custodian(), address(custodian));
+        // Sanity: the custodian really is a contract, not an EOA.
+        assertGt(address(custodian).code.length, 0);
+    }
+
+    function test_setCustodian_rejects_eoa() public {
+        // An EOA has no code → must revert CustodianNotContract.
+        vm.prank(admin);
+        vm.expectRevert(SGSMMVault.CustodianNotContract.selector);
+        vault.setCustodian(address(0xE0A));
+    }
+
+    function test_setCustodian_rejects_zero_address() public {
+        vm.prank(admin);
+        vm.expectRevert(SGSMMVault.ZeroAddress.selector);
+        vault.setCustodian(address(0));
+    }
+
+    function test_setCustodian_requires_admin_role() public {
+        // alice lacks DEFAULT_ADMIN_ROLE. Cache the role BEFORE pranking: an inline
+        // vault.DEFAULT_ADMIN_ROLE() in the expectRevert args would otherwise consume the
+        // prank (vm.prank affects only the next call) so setCustodian would run as the
+        // default sender and the asserted caller wouldn't match.
+        bytes32 adminRole = vault.DEFAULT_ADMIN_ROLE();
+        vm.prank(alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, alice, adminRole
+            )
+        );
+        vault.setCustodian(address(custodian));
+    }
+
+    function test_enterMirror_reverts_when_custodian_unset() public {
+        // Fresh, funded vault with an executor but NO custodian set.
+        SGSMMVault bare = new SGSMMVault(IERC20(address(usdy)), admin);
+        MockCustodian exec = new MockCustodian(bare);
+        bytes32 execRole = bare.EXECUTOR_ROLE();
+        vm.prank(admin);
+        bare.grantRole(execRole, address(exec));
+
+        // Fund it so the revert is provably the custody guard, not NavIsZero.
+        usdy.mint(alice, 1_000_000 ether);
+        vm.startPrank(alice);
+        usdy.approve(address(bare), type(uint256).max);
+        bare.deposit(1_000_000 ether, alice);
+        vm.stopPrank();
+
+        vm.expectRevert(SGSMMVault.CustodianNotSet.selector);
+        exec.enter(wallet1, 1 ether);
     }
 
     // ---------------------------------------------------------------------
@@ -56,13 +124,12 @@ contract SGSMMVaultTest is Test {
     }
 
     // ---------------------------------------------------------------------
-    // enterMirror — sizing caps
+    // enterMirror — sizing caps + contract custody
     // ---------------------------------------------------------------------
 
     function test_enter_mirror_within_per_position_cap_succeeds() public {
         // 8% of 1M = 80_000 — exactly at per-position cap, should pass
-        vm.prank(executor);
-        uint256 positionId = vault.enterMirror(wallet1, 80_000 ether, executor);
+        uint256 positionId = custodian.enter(wallet1, 80_000 ether);
 
         assertEq(positionId, 0);
         assertEq(vault.deployedSleeve(), 80_000 ether);
@@ -70,29 +137,27 @@ contract SGSMMVaultTest is Test {
         assertEq(vault.walletPositionCount(wallet1), 1);
         assertEq(vault.positionPrincipal(wallet1, positionId), 80_000 ether);
         assertEq(usdy.balanceOf(address(vault)), 920_000 ether);
-        assertEq(usdy.balanceOf(executor), 80_000 ether);
+        // CUSTODY: the sleeve lands on the custodian CONTRACT — not on any EOA.
+        assertEq(usdy.balanceOf(address(custodian)), 80_000 ether);
     }
 
     function test_enter_mirror_exceeds_per_position_cap_reverts() public {
         // 8.01% of 1M = 80_100 → over per-position cap
-        vm.prank(executor);
         vm.expectRevert(
             abi.encodeWithSelector(SGSMMVault.SizingCapExceeded.selector, 801, 800, "per_position")
         );
-        vault.enterMirror(wallet1, 80_100 ether, executor);
+        custodian.enter(wallet1, 80_100 ether);
     }
 
     function test_enter_mirror_exceeds_per_wallet_cap_reverts() public {
         // Two entries on same wallet: 8% + 5% = 13% > per_wallet 12%
-        vm.prank(executor);
-        vault.enterMirror(wallet1, 80_000 ether, executor);
+        custodian.enter(wallet1, 80_000 ether);
 
         // walletAfter = 130_000 → 1300 bps > 1200 per_wallet cap.
-        vm.prank(executor);
         vm.expectRevert(
             abi.encodeWithSelector(SGSMMVault.SizingCapExceeded.selector, 1300, 1200, "per_wallet")
         );
-        vault.enterMirror(wallet1, 50_000 ether, executor);
+        custodian.enter(wallet1, 50_000 ether);
     }
 
     /// @notice The 70% retained-liquidity floor (floor 60% + reserve 10%) is the binding
@@ -105,73 +170,77 @@ contract SGSMMVaultTest is Test {
         // Deploy 3 distinct wallets x 8% = 24% — all fine.
         for (uint160 i = 0; i < 3; i++) {
             address w = address(uint160(0xCAFE0) + i);
-            vm.prank(executor);
-            vault.enterMirror(w, 80_000 ether, executor);
+            custodian.enter(w, 80_000 ether);
         }
         assertEq(vault.deployedSleeve(), 240_000 ether);
 
         // Top up to exactly 30% (300_000) with a 4th wallet of 60k (6% — under caps). OK.
-        vm.prank(executor);
-        vault.enterMirror(address(0xCAFE3), 60_000 ether, executor);
+        custodian.enter(address(0xCAFE3), 60_000 ether);
         assertEq(vault.deployedSleeve(), 300_000 ether);
         assertEq(usdy.balanceOf(address(vault)), 700_000 ether);
+        // All deployed capital is custodied by the contract.
+        assertEq(usdy.balanceOf(address(custodian)), 300_000 ether);
 
         // Any further deployment breaches the 70% retained floor: a 5th wallet of even
         // 1_000 would leave 699_000 retained < required 700_000.
         // required = ceil(7000 * 1_000_000e18 / 10_000) = 700_000e18.
         // wouldRetain = 700_000e18 - 1_000e18 = 699_000e18.
-        vm.prank(executor);
         vm.expectRevert(
             abi.encodeWithSelector(
                 SGSMMVault.RetainedLiquidityBreached.selector, 699_000 ether, 700_000 ether
             )
         );
-        vault.enterMirror(address(0xCAFE4), 1_000 ether, executor);
+        custodian.enter(address(0xCAFE4), 1_000 ether);
     }
 
     function test_enter_mirror_zero_amount_reverts() public {
         // Previously this path wrongly reverted NothingToExit; now it is ZeroAmount.
-        vm.prank(executor);
         vm.expectRevert(SGSMMVault.ZeroAmount.selector);
-        vault.enterMirror(wallet1, 0, executor);
+        custodian.enter(wallet1, 0);
     }
 
     function test_enter_mirror_on_empty_vault_reverts_nav_is_zero() public {
         // A fresh, unseeded vault has zero NAV; enterMirror must revert NavIsZero
-        // (custom error, not a Panic) before any cap math runs.
+        // (custom error, not a Panic) AFTER the custody guard passes. We therefore set
+        // a (contract) custodian first so the revert provably comes from the NAV check.
         SGSMMVault bare = new SGSMMVault(IERC20(address(usdy)), admin);
-        // Cache the role BEFORE pranking: vm.prank only affects the next call, and an
-        // inline bare.EXECUTOR_ROLE() view call would otherwise consume the prank.
+        MockCustodian exec = new MockCustodian(bare);
         bytes32 execRole = bare.EXECUTOR_ROLE();
-        vm.prank(admin);
-        bare.grantRole(execRole, executor);
+        vm.startPrank(admin);
+        bare.grantRole(execRole, address(exec));
+        bare.setCustodian(address(exec));
+        vm.stopPrank();
 
-        vm.prank(executor);
         vm.expectRevert(SGSMMVault.NavIsZero.selector);
-        bare.enterMirror(wallet1, 1 ether, executor);
+        exec.enter(wallet1, 1 ether);
     }
 
     function test_enter_mirror_without_executor_role_reverts() public {
+        // alice (an EOA without EXECUTOR_ROLE) cannot call enterMirror directly. Cache the
+        // role BEFORE pranking so the inline view call doesn't consume the prank.
+        bytes32 execRole = vault.EXECUTOR_ROLE();
         vm.prank(alice);
-        vm.expectRevert();
-        vault.enterMirror(wallet1, 1 ether, alice);
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                IAccessControl.AccessControlUnauthorizedAccount.selector, alice, execRole
+            )
+        );
+        vault.enterMirror(wallet1, 1 ether);
     }
 
     // ---------------------------------------------------------------------
-    // exitMirror — settlement integrity (keyed by positionId)
+    // exitMirror — settlement integrity (keyed by positionId), funds pulled
+    // from the contract custodian
     // ---------------------------------------------------------------------
 
     function test_exit_mirror_with_profit_increases_nav() public {
-        // Enter at 80k
-        vm.prank(executor);
-        uint256 positionId = vault.enterMirror(wallet1, 80_000 ether, executor);
+        // Enter at 80k — sleeve lands on the custodian contract.
+        uint256 positionId = custodian.enter(wallet1, 80_000 ether);
 
-        // Simulate trade: executor receives extra capital from offchain trade
-        usdy.mint(executor, 5_000 ether);
-        vm.startPrank(executor);
-        usdy.approve(address(vault), type(uint256).max);
-        uint256 realized = vault.exitMirror(wallet1, positionId, 85_000 ether);
-        vm.stopPrank();
+        // Simulate a profitable offchain trade: extra capital accrues to the custodian
+        // CONTRACT (not an EOA). The vault then PULLS the returned amount from it.
+        usdy.mint(address(custodian), 5_000 ether);
+        uint256 realized = custodian.exit(wallet1, positionId, 85_000 ether);
 
         // Realized is the MEASURED balance delta, not the caller's asserted figure.
         assertEq(realized, 85_000 ether);
@@ -181,51 +250,46 @@ contract SGSMMVaultTest is Test {
         assertEq(vault.positionPrincipal(wallet1, positionId), 0);
         // NAV grew by 5K (1M - 80K + 85K = 1.005M)
         assertEq(vault.totalAssets(), 1_005_000 ether);
+        // Custodian returned everything it held for this position.
+        assertEq(usdy.balanceOf(address(custodian)), 0);
     }
 
     function test_exit_mirror_with_loss_decreases_nav() public {
-        vm.prank(executor);
-        uint256 positionId = vault.enterMirror(wallet1, 80_000 ether, executor);
+        uint256 positionId = custodian.enter(wallet1, 80_000 ether);
 
-        // Loss: only 70k of original 80k returned
-        vm.startPrank(executor);
-        usdy.approve(address(vault), type(uint256).max);
-        uint256 realized = vault.exitMirror(wallet1, positionId, 70_000 ether);
-        vm.stopPrank();
+        // Loss: custodian only returns 70k of the original 80k (10k lost offchain).
+        // Move 10k out of the custodian so it holds exactly 70k to return.
+        vm.prank(address(custodian));
+        usdy.transfer(address(0xBE111), 10_000 ether); // simulate the 10k offchain loss
+        uint256 realized = custodian.exit(wallet1, positionId, 70_000 ether);
 
         assertEq(realized, 70_000 ether);
         // Accounting reduced by the RECORDED principal (80k), balance up by measured 70k.
         assertEq(vault.totalAssets(), 990_000 ether);
         assertEq(vault.deployedSleeve(), 0);
+        assertEq(usdy.balanceOf(address(custodian)), 0);
     }
 
     function test_exit_mirror_unknown_position_reverts() public {
         // No position opened for wallet1 → positionId 0 has zero recorded principal.
-        vm.prank(executor);
         vm.expectRevert(SGSMMVault.PositionNotOpen.selector);
-        vault.exitMirror(wallet1, 0, 1 ether);
+        custodian.exit(wallet1, 0, 1 ether);
     }
 
     function test_exit_mirror_double_exit_reverts() public {
-        vm.prank(executor);
-        uint256 positionId = vault.enterMirror(wallet1, 80_000 ether, executor);
+        uint256 positionId = custodian.enter(wallet1, 80_000 ether);
 
-        vm.startPrank(executor);
-        usdy.approve(address(vault), type(uint256).max);
-        vault.exitMirror(wallet1, positionId, 80_000 ether);
+        custodian.exit(wallet1, positionId, 80_000 ether);
         // Second exit of the same position must revert — ledger already zeroed.
         vm.expectRevert(SGSMMVault.PositionNotOpen.selector);
-        vault.exitMirror(wallet1, positionId, 80_000 ether);
-        vm.stopPrank();
+        custodian.exit(wallet1, positionId, 80_000 ether);
     }
 
     /// @notice Two positions on the same wallet get distinct, monotonically-increasing ids
     ///         and settle independently against their own recorded principals.
     function test_two_positions_same_wallet_have_distinct_ids() public {
-        vm.startPrank(executor);
-        uint256 id0 = vault.enterMirror(wallet1, 80_000 ether, executor); // 8%
-        uint256 id1 = vault.enterMirror(wallet1, 40_000 ether, executor); // +4% = 12% wallet cap
-        vm.stopPrank();
+        uint256 id0 = custodian.enter(wallet1, 80_000 ether); // 8%
+        uint256 id1 = custodian.enter(wallet1, 40_000 ether); // +4% = 12% wallet cap
 
         assertEq(id0, 0);
         assertEq(id1, 1);
@@ -234,10 +298,7 @@ contract SGSMMVaultTest is Test {
         assertEq(vault.deployedSleeve(), 120_000 ether);
 
         // Close the first position only; second remains open.
-        vm.startPrank(executor);
-        usdy.approve(address(vault), type(uint256).max);
-        vault.exitMirror(wallet1, id0, 80_000 ether);
-        vm.stopPrank();
+        custodian.exit(wallet1, id0, 80_000 ether);
 
         assertEq(vault.walletExposure(wallet1), 40_000 ether);
         assertEq(vault.walletPositionCount(wallet1), 1);
@@ -253,9 +314,8 @@ contract SGSMMVaultTest is Test {
     function test_pause_blocks_new_entries() public {
         vm.prank(admin);
         vault.pause();
-        vm.prank(executor);
         vm.expectRevert(Pausable.EnforcedPause.selector);
-        vault.enterMirror(wallet1, 1 ether, executor);
+        custodian.enter(wallet1, 1 ether);
     }
 
     /// @notice NEW hardening: _deposit carries whenNotPaused, so deposits (and mints)
@@ -282,17 +342,14 @@ contract SGSMMVaultTest is Test {
     }
 
     function test_pause_does_not_block_exits() public {
-        vm.prank(executor);
-        uint256 positionId = vault.enterMirror(wallet1, 50_000 ether, executor);
+        uint256 positionId = custodian.enter(wallet1, 50_000 ether);
 
         vm.prank(admin);
         vault.pause();
 
-        // exitMirror intentionally stays OPEN while paused so capital can flow back.
-        vm.startPrank(executor);
-        usdy.approve(address(vault), type(uint256).max);
-        vault.exitMirror(wallet1, positionId, 50_000 ether);
-        vm.stopPrank();
+        // exitMirror intentionally stays OPEN while paused so capital can flow back
+        // from the custodian to the vault during an incident.
+        custodian.exit(wallet1, positionId, 50_000 ether);
 
         assertEq(vault.deployedSleeve(), 0);
     }

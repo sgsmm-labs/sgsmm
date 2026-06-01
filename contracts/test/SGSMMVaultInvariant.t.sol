@@ -10,9 +10,10 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /**
  * @title VaultHandler
  * @notice Bounded action surface for the SGSMMVault invariant fuzzer.
- * @dev The handler holds EXECUTOR_ROLE and is itself the `executorRecipient`, so deployed
- *      sleeve capital lands in the handler and can be returned via {exit}. It maintains a
- *      ghost ledger (tracked wallets + their open position ids + a running exposure sum)
+ * @dev The handler holds EXECUTOR_ROLE and is itself the vault's `custodian` CONTRACT, so
+ *      under the C-1 custody model deployed sleeve capital lands in the handler (never an
+ *      EOA) and can be returned via {exit} (the vault PULLS from the handler). It maintains
+ *      a ghost ledger (tracked wallets + their open position ids + a running exposure sum)
  *      so the invariant suite can cross-check the vault's internal accounting and so
  *      exits always reference a *valid, open* positionId.
  *
@@ -133,8 +134,8 @@ contract VaultHandler is Test {
         uint256 requiredRetained = (uint256(vault.RETAINED_LIQUID_BPS()) * nav) / 10_000;
         if (liquid < amount || liquid - amount < requiredRetained) return;
 
-        // Handler is the executorRecipient; funds land here for later return on exit.
-        uint256 positionId = vault.enterMirror(wallet, amount, address(this));
+        // Handler IS the vault custodian; the sleeve lands here for later return on exit.
+        uint256 positionId = vault.enterMirror(wallet, amount);
         openPositions[wallet].push(positionId);
         ghostExposureSum += amount;
         callsEnter++;
@@ -243,8 +244,12 @@ contract SGSMMVaultInvariantTest is StdInvariant, Test {
         // vault.EXECUTOR_ROLE() view would otherwise consume the prank → grantRole would
         // run as the test contract and revert AccessControlUnauthorizedAccount).
         bytes32 execRole = vault.EXECUTOR_ROLE();
-        vm.prank(admin);
+        vm.startPrank(admin);
         vault.grantRole(execRole, address(handler));
+        // C-1 custody: the handler CONTRACT is the vault's sole sleeve custodian, so
+        // enterMirror routes the sleeve to it (it has code → satisfies setCustodian).
+        vault.setCustodian(address(handler));
+        vm.stopPrank();
 
         // Only fuzz the handler's curated action surface.
         bytes4[] memory selectors = new bytes4[](5);
