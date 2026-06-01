@@ -38,6 +38,10 @@ contract MirrorExecutor is AccessControl {
         uint256 amountOut
     );
 
+    /// @notice Surfaces the vault position id assigned to a fresh entry so off-chain
+    ///         agents can reference it later when defunding/unwinding.
+    event MirrorPositionOpened(address indexed wallet, uint256 indexed positionId, uint256 amount);
+
     error UnknownAction();
 
     constructor(
@@ -62,29 +66,31 @@ contract MirrorExecutor is AccessControl {
     }
 
     /// @notice Enter a mirror position for `wallet` with `amount` of vault asset.
+    /// @return positionId The vault ledger id for this entry (echoed via event too).
     function executeEnter(
         address wallet,
         uint256 amount,
         int128 sortinoMicros,
         uint32 sleevePctBps,
         uint32 reasonCode
-    ) external onlyRole(AGENT_ROLE) {
-        vault.enterMirror(wallet, amount, msg.sender);
+    ) external onlyRole(AGENT_ROLE) returns (uint256 positionId) {
+        positionId = vault.enterMirror(wallet, amount, msg.sender);
+        // navAfter is read from the vault directly inside logDecision (not forged here).
         decisionLog.logDecision(
-            wallet,
-            DecisionLog.Action.Enter,
-            sortinoMicros,
-            sleevePctBps,
-            vault.totalAssets(),
-            reasonCode
+            wallet, DecisionLog.Action.Enter, sortinoMicros, sleevePctBps, reasonCode
         );
+        emit MirrorPositionOpened(wallet, positionId, amount);
         emit AgentExecuted(wallet, DecisionLog.Action.Enter, sortinoMicros, amount, 0);
     }
 
-    /// @notice Exit a mirror position. Agent must pre-approve vault to pull `amountReturned`.
+    /// @notice Exit a mirror position by its vault `positionId`. Agent must pre-approve
+    ///         this executor's transfer; the executor then approves the vault to pull
+    ///         `amountReturned`. The vault settles against its recorded principal and
+    ///         the measured balance delta, so `amountReturned` here is only an upper
+    ///         bound on what the vault credits.
     function executeExit(
         address wallet,
-        uint256 originalAmount,
+        uint256 positionId,
         uint256 amountReturned,
         DecisionLog.Action action,
         int128 sortinoMicros,
@@ -97,13 +103,11 @@ contract MirrorExecutor is AccessControl {
         IERC20 asset = IERC20(vault.asset());
         asset.safeTransferFrom(msg.sender, address(this), amountReturned);
         asset.forceApprove(address(vault), amountReturned);
-        vault.exitMirror(wallet, originalAmount, amountReturned);
+        uint256 realizedAssets = vault.exitMirror(wallet, positionId, amountReturned);
 
-        decisionLog.logDecision(
-            wallet, action, sortinoMicros, 0, vault.totalAssets(), reasonCode
-        );
+        decisionLog.logDecision(wallet, action, sortinoMicros, 0, reasonCode);
 
-        emit AgentExecuted(wallet, action, sortinoMicros, originalAmount, amountReturned);
+        emit AgentExecuted(wallet, action, sortinoMicros, 0, realizedAssets);
     }
 
     /// @notice Log a HOLD or SKIP decision without modifying vault state.
@@ -116,9 +120,7 @@ contract MirrorExecutor is AccessControl {
         if (action != DecisionLog.Action.Hold && action != DecisionLog.Action.Skip) {
             revert UnknownAction();
         }
-        decisionLog.logDecision(
-            wallet, action, sortinoMicros, 0, vault.totalAssets(), reasonCode
-        );
+        decisionLog.logDecision(wallet, action, sortinoMicros, 0, reasonCode);
         emit AgentExecuted(wallet, action, sortinoMicros, 0, 0);
     }
 

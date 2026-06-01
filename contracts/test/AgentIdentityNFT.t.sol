@@ -86,4 +86,36 @@ contract AgentIdentityNFTTest is Test {
         // AccessControl = 0x7965db0b
         assertTrue(nft.supportsInterface(0x7965db0b));
     }
+
+    /// @notice Registration is OPEN BY DESIGN (EIP-8004 Identity Registry semantics):
+    ///         any address may register, and the URI is self-asserted / untrusted. The
+    ///         agentId binding only proves *some* address minted it — it is NOT an
+    ///         endorsement of the manifest. This test documents that contract behavior:
+    ///         two distinct addresses can register the SAME URI and both succeed.
+    function test_registration_is_permissionless_and_uri_is_untrusted() public {
+        // No role grant to alice/bob — registration needs none.
+        vm.prank(alice);
+        uint256 a = nft.register("ipfs://same-manifest");
+        vm.prank(bob);
+        uint256 b = nft.register("ipfs://same-manifest");
+
+        assertEq(a, 0);
+        assertEq(b, 1);
+        // Identical (untrusted) URIs are allowed; the binding is per-owner, not unique.
+        assertEq(nft.agentURI(a), nft.agentURI(b));
+        assertEq(nft.ownerOf(a), alice);
+        assertEq(nft.ownerOf(b), bob);
+    }
+
+    /// @notice Privileged reputation writes stay role-gated even for the token owner:
+    ///         minting an identity does NOT grant the right to write trusted metadata.
+    function test_owner_cannot_self_write_metadata_without_role() public {
+        vm.prank(alice);
+        uint256 id = nft.register("ipfs://A");
+
+        // Alice owns the token but lacks METADATA_WRITER_ROLE → setMetadata reverts.
+        vm.prank(alice);
+        vm.expectRevert();
+        nft.setMetadata(id, "sortino_score", abi.encode(int256(1_500_000)));
+    }
 }

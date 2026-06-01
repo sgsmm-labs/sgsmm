@@ -3,7 +3,7 @@ pragma solidity 0.8.26;
 
 import {Test} from "forge-std/Test.sol";
 import {SGSMMVault} from "../src/SGSMMVault.sol";
-import {DecisionLog} from "../src/DecisionLog.sol";
+import {DecisionLog, IVaultNav} from "../src/DecisionLog.sol";
 import {AgentIdentityNFT} from "../src/AgentIdentityNFT.sol";
 import {MirrorExecutor} from "../src/MirrorExecutor.sol";
 import {MockUSDY} from "./mocks/MockUSDY.sol";
@@ -25,7 +25,8 @@ contract MirrorExecutorTest is Test {
     function setUp() public {
         usdy = new MockUSDY();
         vault = new SGSMMVault(IERC20(address(usdy)), admin);
-        decisionLog = new DecisionLog(admin);
+        // DecisionLog now binds the vault so navAfter is read on-chain (not forged).
+        decisionLog = new DecisionLog(admin, IVaultNav(address(vault)));
         identity = new AgentIdentityNFT(admin);
 
         // Mint agent identity NFT
@@ -66,11 +67,27 @@ contract MirrorExecutorTest is Test {
         executor.advanceCycle();
 
         vm.prank(agent);
-        executor.executeEnter(wallet1, 80_000 ether, int128(1_800_000), uint32(800), uint32(1));
+        uint256 positionId =
+            executor.executeEnter(wallet1, 80_000 ether, int128(1_800_000), uint32(800), uint32(1));
 
+        // First position for a wallet is id 0 (monotonic per-wallet nonce starts at 0).
+        assertEq(positionId, 0);
         assertEq(vault.deployedSleeve(), 80_000 ether);
         assertEq(usdy.balanceOf(agent), 80_000 ether);
         assertEq(vault.walletExposure(wallet1), 80_000 ether);
+        // The ledger must record the principal for this exact position id.
+        assertEq(vault.positionPrincipal(wallet1, positionId), 80_000 ether);
+    }
+
+    /// @notice executeEnter must surface the vault position id via MirrorPositionOpened.
+    function test_executeEnter_emits_position_opened() public {
+        vm.prank(agent);
+        executor.advanceCycle();
+
+        vm.prank(agent);
+        vm.expectEmit(true, true, false, true, address(executor));
+        emit MirrorExecutor.MirrorPositionOpened(wallet1, 0, 80_000 ether);
+        executor.executeEnter(wallet1, 80_000 ether, int128(1_800_000), uint32(800), uint32(1));
     }
 
     function test_executeExit_with_defund_returns_funds() public {
@@ -78,30 +95,59 @@ contract MirrorExecutorTest is Test {
         executor.advanceCycle();
 
         vm.prank(agent);
-        executor.executeEnter(wallet1, 80_000 ether, int128(1_800_000), uint32(800), uint32(1));
+        uint256 positionId =
+            executor.executeEnter(wallet1, 80_000 ether, int128(1_800_000), uint32(800), uint32(1));
 
-        // Agent returns same amount (no PnL for test simplicity)
+        // Agent returns same amount (no PnL for test simplicity). Exit is keyed by the
+        // vault positionId now, NOT the original amount.
         vm.startPrank(agent);
         usdy.approve(address(executor), 80_000 ether);
         executor.executeExit(
-            wallet1, 80_000 ether, 80_000 ether, DecisionLog.Action.Defund, int128(400_000), uint32(2)
+            wallet1, positionId, 80_000 ether, DecisionLog.Action.Defund, int128(400_000), uint32(2)
         );
         vm.stopPrank();
 
         assertEq(vault.deployedSleeve(), 0);
         assertEq(vault.walletExposure(wallet1), 0);
+        // Position is closed: principal ledger zeroed.
+        assertEq(vault.positionPrincipal(wallet1, positionId), 0);
+    }
+
+    /// @notice Settlement integrity: vault credits the MEASURED balance delta and reduces
+    ///         accounting by the RECORDED principal, so a profitable return lifts NAV.
+    function test_executeExit_credits_measured_profit() public {
+        vm.prank(agent);
+        executor.advanceCycle();
+
+        vm.prank(agent);
+        uint256 positionId =
+            executor.executeEnter(wallet1, 80_000 ether, int128(1_800_000), uint32(800), uint32(1));
+
+        // Simulate offchain profit: agent now holds 85k to return.
+        usdy.mint(agent, 5_000 ether);
+        vm.startPrank(agent);
+        usdy.approve(address(executor), 85_000 ether);
+        executor.executeExit(
+            wallet1, positionId, 85_000 ether, DecisionLog.Action.Defund, int128(400_000), uint32(2)
+        );
+        vm.stopPrank();
+
+        assertEq(vault.deployedSleeve(), 0);
+        // NAV grew by realized 5k profit: 1M - 80k principal + 85k returned = 1.005M.
+        assertEq(vault.totalAssets(), 1_005_000 ether);
     }
 
     function test_executeExit_with_enter_action_reverts() public {
         vm.prank(agent);
         executor.advanceCycle();
         vm.prank(agent);
-        executor.executeEnter(wallet1, 80_000 ether, int128(1_800_000), uint32(800), uint32(1));
+        uint256 positionId =
+            executor.executeEnter(wallet1, 80_000 ether, int128(1_800_000), uint32(800), uint32(1));
 
         vm.prank(agent);
         vm.expectRevert(MirrorExecutor.UnknownAction.selector);
         executor.executeExit(
-            wallet1, 80_000 ether, 80_000 ether, DecisionLog.Action.Enter, int128(0), uint32(0)
+            wallet1, positionId, 80_000 ether, DecisionLog.Action.Enter, int128(0), uint32(0)
         );
     }
 

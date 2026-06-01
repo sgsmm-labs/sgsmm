@@ -42,7 +42,17 @@ contract AgentIdentityNFT is ERC721, AccessControl {
         _grantRole(DEFAULT_ADMIN_ROLE, admin);
     }
 
-    /// @notice Mint a new agent identity NFT to caller, with URI + optional initial metadata.
+    /// @notice Mint a new agent identity NFT to caller, with a self-asserted URI.
+    /// @dev OPEN REGISTRATION BY DESIGN (EIP-8004 Identity Registry semantics):
+    ///      anyone may register and any `uri` is caller-supplied and therefore
+    ///      UNTRUSTED. The returned `agentId` only proves that *some* address
+    ///      minted it — it is NOT an endorsement, KYC, or proof the manifest is
+    ///      authentic. Consumers (frontend, indexers, other contracts) MUST treat
+    ///      both the agentId binding and the URI/metadata as unverified input and
+    ///      apply their own allow-listing / signature checks before trusting an
+    ///      agent. Privileged on-chain reputation writes are separately gated
+    ///      behind METADATA_WRITER_ROLE via {setMetadata}; only `register`,
+    ///      `setAgentURI`, and the ERC-721 ownership surface are permissionless.
     function register(string calldata uri) external returns (uint256 agentId) {
         agentId = nextAgentId;
         unchecked {
