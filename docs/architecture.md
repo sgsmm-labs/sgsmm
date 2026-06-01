@@ -1,28 +1,31 @@
 # SGSMM Architecture
 
-High-level overview of the system. Detailed strategy spec and policy thresholds are intentionally not duplicated here — they will be published in the submission writeup at Day 14.
+High-level overview of the system design and component interactions. This document describes the **architecture and infrastructure**, not deployment status. See the root README for current status.
+
+> **IMPORTANT: Current Status**  
+> Contracts are **written and tested** (35 passing tests, see `contracts/test/`) but **NOT YET DEPLOYED** to Mantle Sepolia. The indexer runs locally on Lendle lending events + L1 bridge arrivals. The strategy is validated via backtest on real historical data but does **not yet clear its kill-criterion gate** (realized Sortino 0.51 vs required 1.5). This document describes the full system design *as intended*, not the current operational state.
 
 ## Components
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  Ponder Indexer                                             │
-│  • Indexes Mantle on-chain DeFi events                      │
-│  • Tracks wallet positions across Aave/Lendle/Pendle/Moe    │
-│  • Exposes Hono API for agent consumption                   │
+│  Ponder Indexer (LOCAL)                                     │
+│  • Indexes Mantle lending events (Lendle)                   │
+│  • Tracks Ethereum→Mantle L1 bridge arrivals                │
+│  • Exposes REST API for eligible wallets                    │
 └──────────────────────┬──────────────────────────────────────┘
-                       │ Postgres
+                       │ (local dev only)
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Python Agent (FastAPI service)                             │
+│  Python Agent (FastAPI service — PROTOTYPE)                 │
 │  • Wallet eligibility classifier (Sortino + label + DD)     │
-│  • Decision engine (size + entry + defund)                  │
-│  • Submits transactions to Vault on Mantle                  │
+│  • Decision engine logic (size + entry + defund)            │
+│  • [NOT YET] Submits transactions to Vault on Mantle        │
 └──────────────────────┬──────────────────────────────────────┘
-                       │ EIP-1559 tx
+                       │ [pending deployment]
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Solidity Contracts on Mantle Sepolia                       │
+│  Solidity Contracts (WRITTEN + TESTED, not deployed)        │
 │  ┌─────────────────┐  ┌────────────────────┐                │
 │  │ SGSMMVault.sol  │  │ MirrorExecutor.sol │                │
 │  │ ERC-4626        │  │ Policy enforcement │                │
@@ -35,19 +38,18 @@ High-level overview of the system. Detailed strategy spec and policy thresholds 
 │  │ event Decision  │  │ ERC-8004 reputation│                │
 │  └─────────────────┘  └────────────────────┘                │
 └──────────────────────┬──────────────────────────────────────┘
-                       │ events
+                       │ [contract code exists; events not yet emitted]
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Next.js Dashboard (Vercel)                                 │
-│  • Equity curve vs naive baseline (the proof chart)         │
-│  • Active mirror positions table                            │
-│  • Decision feed (every action transparent)                 │
-│  • Agent reputation NFT view                                │
-│  • Vault deposit/withdraw                                   │
+│  Next.js Dashboard (LOCAL)                                  │
+│  • Equity curve vs naive baseline (backtest proof chart)    │
+│  • Simulated mirror positions table                         │
+│  • Decision feed (from backtest decision panel)             │
+│  • Vault deposit/withdraw UI (not yet connected)            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Data flow per cycle (24h cadence)
+## Data flow per cycle (24h cadence — INTENDED)
 
 1. Indexer ingests Mantle on-chain events → Postgres
 2. Agent fetches latest wallet positions + label refresh + price snapshot
@@ -57,17 +59,19 @@ High-level overview of the system. Detailed strategy spec and policy thresholds 
 6. MirrorExecutor enforces policy on-chain; DecisionLog emits events
 7. Dashboard polls events; updates UI
 
+**Current state:** Steps 1–4 are implemented and validated via backtest. Steps 5–7 require on-chain deployment (pending Phase 2 gate clearance).
+
 ## Why each layer exists
 
-| Layer | Justification |
-|---|---|
-| Ponder Indexer | On-chain data fragmented across protocols; need normalized position view per wallet |
-| Python Agent | Sortino + classifier logic too gas-intensive for on-chain; off-chain compute, on-chain enforcement |
-| Vault contract | Custody + accounting on-chain so users trust deposit, can withdraw anytime |
-| MirrorExecutor | Hard policy enforcement: even if agent goes rogue, caps + reserve buffer protect funds |
-| DecisionLog | Verifiability requirement from Path B rubric (40% Strategy Alpha = backtest + live + on-chain records) |
-| AgentIdentityNFT | ERC-8004 hackathon requirement; reputation tracks agent quality over time |
-| Dashboard | Best UI/UX bonus ($3K); also helps Community Voting; transparency aid for judges |
+| Layer | Justification | Status |
+|---|---|---|
+| Ponder Indexer | On-chain data fragmented across protocols; need normalized position view per wallet | ✓ Implemented (local; indexes Lendle + L1 bridge) |
+| Python Agent | Sortino + classifier logic too gas-intensive for on-chain; off-chain compute, on-chain enforcement | ✓ Implemented (decision logic validated via backtest) |
+| Vault contract | Custody + accounting on-chain so users trust deposit, can withdraw anytime | ✓ Written & tested; deployment pending |
+| MirrorExecutor | Hard policy enforcement: even if agent goes rogue, caps + reserve buffer protect funds | ✓ Written & tested; deployment pending |
+| DecisionLog | Verifiability requirement from Path B rubric (40% Strategy Alpha = backtest + live + on-chain records) | ✓ Written & tested; deployment pending |
+| AgentIdentityNFT | ERC-8004 hackathon requirement; reputation tracks agent quality over time | ✓ Written & tested; deployment pending |
+| Dashboard | Best UI/UX bonus ($3K); also helps Community Voting; transparency aid for judges | ✓ Implemented (displays backtest results) |
 
 ## Repository structure (planned)
 
