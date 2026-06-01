@@ -1,7 +1,19 @@
 import { db } from "ponder:api";
 import schema from "ponder:schema";
 import { Hono } from "hono";
-import { client, graphql, desc, eq, isNotNull, gte, lt } from "ponder";
+import {
+  client,
+  graphql,
+  desc,
+  asc,
+  eq,
+  gt,
+  lt,
+  gte,
+  and,
+  or,
+  isNotNull,
+} from "ponder";
 import { isAddress } from "viem";
 
 const app = new Hono();
@@ -31,14 +43,27 @@ app.get("/health", async (c) => {
 });
 
 /**
- * GET /wallets/eligible?min_sortino=<bigint>&limit=<number>&before=<rolling90dSortinoMicros>
+ * Split a composite keyset cursor "<value>_<key>" on the FIRST underscore.
+ * The value part is always numeric (no underscore); the key part is the rest
+ * (an address or an event id), so this is unambiguous even if the key contains
+ * underscores.
+ */
+function splitCursor(cursor: string): { value: string; key: string } {
+  const i = cursor.indexOf("_");
+  return i === -1
+    ? { value: cursor, key: "" }
+    : { value: cursor.slice(0, i), key: cursor.slice(i + 1) };
+}
+
+/**
+ * GET /wallets/eligible?min_sortino=<micros>&limit=<n>&before=<sortinoMicros>_<address>
  *
- * Returns wallets ordered by rolling90dSortinoMicros descending.
- * Filters out wallets with null sortino values.
- * Query params:
- *   min_sortino  — minimum rolling90dSortinoMicros (integer micros, optional, default 0)
- *   limit        — max rows to return (optional, default 50, max 500)
- *   before       — keyset cursor: return rows with rolling90dSortinoMicros < this value (integer micros)
+ * Wallets ordered by rolling90dSortinoMicros DESC, then address ASC (a total
+ * order, so keyset pagination never skips boundary-tied rows). The min_sortino
+ * filter is applied on EVERY page (page 1 and beyond).
+ *   min_sortino  — minimum rolling90dSortinoMicros (signed integer micros, optional)
+ *   limit        — max rows (optional, default 50, max 500)
+ *   before       — composite keyset cursor "<sortinoMicros>_<address>" (from nextCursor)
  */
 app.get("/wallets/eligible", async (c) => {
   const limitParam = c.req.query("limit");
@@ -50,27 +75,46 @@ app.get("/wallets/eligible", async (c) => {
   if (minSortinoParam !== undefined && !/^-?\d+$/.test(minSortinoParam)) {
     return c.json({ error: "min_sortino must be an integer (micros)" }, 400);
   }
-  if (beforeParam !== undefined && !/^-?\d+$/.test(beforeParam)) {
-    return c.json({ error: "before must be an integer (micros)" }, 400);
-  }
-  const minSortino = BigInt(minSortinoParam ?? "0");
-  const beforeCursor = beforeParam !== undefined ? BigInt(beforeParam) : undefined;
 
-  // Build WHERE: combine isNotNull/gte with optional keyset cursor (lt)
-  const baseCondition =
+  // Parse the optional composite cursor.
+  let beforeSortino: bigint | undefined;
+  let beforeAddress: `0x${string}` | undefined;
+  if (beforeParam !== undefined) {
+    const { value, key } = splitCursor(beforeParam);
+    if (!/^-?\d+$/.test(value) || !isAddress(key)) {
+      return c.json(
+        { error: "before must be '<sortinoMicros>_<address>'" },
+        400,
+      );
+    }
+    beforeSortino = BigInt(value);
+    beforeAddress = key.toLowerCase() as `0x${string}`;
+  }
+
+  // Base filter — applied on every page.
+  const baseFilter =
     minSortinoParam !== undefined
-      ? gte(schema.wallet.rolling90dSortinoMicros, minSortino)
+      ? gte(schema.wallet.rolling90dSortinoMicros, BigInt(minSortinoParam))
       : isNotNull(schema.wallet.rolling90dSortinoMicros);
+
+  // Keyset predicate for (sortino DESC, address ASC): rows strictly after the
+  // cursor are `sortino < cv OR (sortino == cv AND address > ck)`.
+  const keyset =
+    beforeSortino !== undefined && beforeAddress !== undefined
+      ? or(
+          lt(schema.wallet.rolling90dSortinoMicros, beforeSortino),
+          and(
+            eq(schema.wallet.rolling90dSortinoMicros, beforeSortino),
+            gt(schema.wallet.address, beforeAddress),
+          ),
+        )
+      : undefined;
 
   const rows = await db
     .select()
     .from(schema.wallet)
-    .where(
-      beforeCursor !== undefined
-        ? lt(schema.wallet.rolling90dSortinoMicros, beforeCursor)
-        : baseCondition,
-    )
-    .orderBy(desc(schema.wallet.rolling90dSortinoMicros))
+    .where(keyset ? and(baseFilter, keyset) : baseFilter)
+    .orderBy(desc(schema.wallet.rolling90dSortinoMicros), asc(schema.wallet.address))
     .limit(limit + 1);
 
   const hasMore = rows.length > limit;
@@ -90,7 +134,7 @@ app.get("/wallets/eligible", async (c) => {
   const lastRow = page[page.length - 1];
   const nextCursor =
     hasMore && lastRow?.rolling90dSortinoMicros != null
-      ? lastRow.rolling90dSortinoMicros.toString()
+      ? `${lastRow.rolling90dSortinoMicros.toString()}_${lastRow.address}`
       : null;
 
   return c.json({ wallets: result, count: result.length, nextCursor });
@@ -154,11 +198,12 @@ app.get("/wallets/:address", async (c) => {
 });
 
 /**
- * GET /decisions/recent?limit=<number>&before=<timestamp>
- * Returns the last N decision events, newest first.
- * Query params:
+ * GET /decisions/recent?limit=<n>&before=<timestamp>_<id>
+ *
+ * Decision events ordered by timestamp DESC, then id ASC (a total order, so
+ * keyset pagination never skips boundary-tied rows).
  *   limit  — max rows (optional, default 50, max 500)
- *   before — keyset cursor: return rows with timestamp < this value (unix seconds as integer)
+ *   before — composite keyset cursor "<timestamp>_<id>" (from nextCursor)
  */
 app.get("/decisions/recent", async (c) => {
   const limitParam = c.req.query("limit");
@@ -166,20 +211,37 @@ app.get("/decisions/recent", async (c) => {
 
   const limit = Math.min(Math.max(1, Number(limitParam ?? "50") || 50), 500);
 
-  if (beforeParam !== undefined && !/^\d+$/.test(beforeParam)) {
-    return c.json({ error: "before must be a non-negative integer (unix seconds)" }, 400);
+  let beforeTs: bigint | undefined;
+  let beforeId: string | undefined;
+  if (beforeParam !== undefined) {
+    const { value, key } = splitCursor(beforeParam);
+    if (!/^\d+$/.test(value) || key.length === 0) {
+      return c.json(
+        { error: "before must be '<timestamp>_<id>'" },
+        400,
+      );
+    }
+    beforeTs = BigInt(value);
+    beforeId = key;
   }
-  const beforeCursor = beforeParam !== undefined ? BigInt(beforeParam) : undefined;
+
+  // Keyset predicate for (timestamp DESC, id ASC).
+  const keyset =
+    beforeTs !== undefined && beforeId !== undefined
+      ? or(
+          lt(schema.decisionEvent.timestamp, beforeTs),
+          and(
+            eq(schema.decisionEvent.timestamp, beforeTs),
+            gt(schema.decisionEvent.id, beforeId),
+          ),
+        )
+      : undefined;
 
   const rows = await db
     .select()
     .from(schema.decisionEvent)
-    .where(
-      beforeCursor !== undefined
-        ? lt(schema.decisionEvent.timestamp, beforeCursor)
-        : undefined,
-    )
-    .orderBy(desc(schema.decisionEvent.timestamp))
+    .where(keyset)
+    .orderBy(desc(schema.decisionEvent.timestamp), asc(schema.decisionEvent.id))
     .limit(limit + 1);
 
   const hasMore = rows.length > limit;
@@ -199,7 +261,10 @@ app.get("/decisions/recent", async (c) => {
   }));
 
   const lastRow = page[page.length - 1];
-  const nextCursor = hasMore && lastRow ? lastRow.timestamp?.toString() ?? null : null;
+  const nextCursor =
+    hasMore && lastRow?.timestamp != null
+      ? `${lastRow.timestamp.toString()}_${lastRow.id}`
+      : null;
 
   return c.json({ decisions: result, count: result.length, nextCursor });
 });
