@@ -13,6 +13,9 @@ venv/
 .env
 .env.local
 
+# Runtime logs
+*.log
+
 # Build artifacts
 *.egg-info/
 build/

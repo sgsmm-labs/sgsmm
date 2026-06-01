@@ -18,6 +18,8 @@ connects to Telegram during import or tests.
 
 from __future__ import annotations
 
+import json
+import re
 import sys
 
 from loguru import logger
@@ -27,6 +29,8 @@ from telegram.ext import Application, CommandHandler, ContextTypes, Defaults
 
 from . import bot_data
 from .config import AgentSettings
+
+_EVM_ADDRESS_RE = re.compile(r"0x[0-9a-fA-F]{40}")
 
 PITCH = (
     "*SGSMM* — Sortino-Gated Smart Money Mirror: an autonomous Mantle agent that "
@@ -133,6 +137,9 @@ async def cmd_leaderboard(update: Update, _ctx: ContextTypes.DEFAULT_TYPE) -> No
     except FileNotFoundError:
         await update.message.reply_text(_SNAPSHOT_MISSING)
         return
+    except (json.JSONDecodeError, KeyError):
+        await update.message.reply_text(_SNAPSHOT_MALFORMED)
+        return
 
     if not rows:
         await update.message.reply_text("No wallets in the current snapshot.")
@@ -168,10 +175,23 @@ async def cmd_wallet(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
         return
 
     address = ctx.args[0].strip()
+
+    # Fix #7: validate address BEFORE touching Markdown — never echo raw user
+    # input through legacy Markdown (unbalanced backticks -> Telegram 400).
+    if not _EVM_ADDRESS_RE.fullmatch(address):
+        await update.message.reply_text(
+            "Invalid address. Expected a 42-character hex address starting with 0x.",
+            parse_mode=None,
+        )
+        return
+
     try:
         record = bot_data.wallet_lookup(address)
     except FileNotFoundError:
         await update.message.reply_text(_SNAPSHOT_MISSING)
+        return
+    except (json.JSONDecodeError, KeyError):
+        await update.message.reply_text(_SNAPSHOT_MALFORMED)
         return
 
     if record is None:
@@ -187,8 +207,10 @@ async def cmd_wallet(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
         f"*Wallet* {_addr_link(record['wallet_address'], full=True)}",
         "",
         f"{emoji} *Verdict:* {record.get('verdict', 'n/a')}",
-        f"*90d Sortino:* {record.get('rolling_90d_sortino', 'n/a')}",
-        f"*30d drawdown:* {_fmt_pct(record.get('realized_dd_30d'))}",
+        # Fix #2: cap-consistent Sortino display
+        f"*90d Sortino:* {_fmt_sortino(record.get('rolling_90d_sortino'))}",
+        # Fix #1: drawdown is a loss — use _fmt_dd (not _fmt_pct which adds "+")
+        f"*30d drawdown:* {_fmt_dd(record.get('realized_dd_30d'))}",
     ]
     if record.get("rank"):
         lines.insert(2, f"*Leaderboard rank:* #{record['rank']}")
@@ -208,6 +230,9 @@ async def cmd_signals(update: Update, _ctx: ContextTypes.DEFAULT_TYPE) -> None:
         s = bot_data.signals_summary()
     except FileNotFoundError:
         await update.message.reply_text(_SNAPSHOT_MISSING)
+        return
+    except (json.JSONDecodeError, KeyError):
+        await update.message.reply_text(_SNAPSHOT_MALFORMED)
         return
 
     lines = [
@@ -240,6 +265,9 @@ async def cmd_anomaly(update: Update, _ctx: ContextTypes.DEFAULT_TYPE) -> None:
     except FileNotFoundError:
         await update.message.reply_text(_SNAPSHOT_MISSING)
         return
+    except (json.JSONDecodeError, KeyError):
+        await update.message.reply_text(_SNAPSHOT_MALFORMED)
+        return
 
     if not rows:
         await update.message.reply_text("✅ No anomalies in the current snapshot.")
@@ -254,8 +282,10 @@ async def cmd_anomaly(update: Update, _ctx: ContextTypes.DEFAULT_TYPE) -> None:
         emoji = _VERDICT_EMOJI.get(a.get("verdict", ""), "🔴")
         lines.append(
             f"{emoji} {_addr_link(a['wallet_address'])} — "
-            f"DD *{_fmt_pct(a.get('realized_dd_30d'))}* · "
-            f"Sortino {a.get('rolling_90d_sortino', 'n/a')}"
+            # Fix #1: use _fmt_dd so loss is shown as "-33%" not "+33%"
+            f"DD *{_fmt_dd(a.get('realized_dd_30d'))}* · "
+            # Fix #2: use _fmt_sortino for cap-consistent "10.00+" display
+            f"Sortino {_fmt_sortino(a.get('rolling_90d_sortino'))}"
         )
     await update.message.reply_text("\n".join(lines), parse_mode=ParseMode.MARKDOWN)
 
@@ -264,6 +294,28 @@ _SNAPSHOT_MISSING = (
     "Snapshot not found. The operator must run "
     "`agent/scripts/build_snapshot.py` to generate it."
 )
+
+_SNAPSHOT_MALFORMED = (
+    "Snapshot unavailable or malformed. The operator must regenerate it with "
+    "`agent/scripts/build_snapshot.py`."
+)
+
+
+async def on_error(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Global error handler: log the exception and best-effort reply to the user.
+
+    Fix #3: registered via application.add_error_handler so unhandled exceptions
+    in any handler are captured rather than silently swallowed by PTB.
+    """
+    logger.exception("Unhandled exception in update handler", exc_info=context.error)
+    if isinstance(update, Update) and update.effective_message:
+        try:
+            await update.effective_message.reply_text(
+                "An unexpected error occurred. Please try again later.",
+                parse_mode=None,
+            )
+        except Exception:  # noqa: BLE001 — best-effort, never raises
+            pass
 
 
 def build_application(token: str) -> Application:
@@ -279,6 +331,8 @@ def build_application(token: str) -> Application:
     application.add_handler(CommandHandler("wallet", cmd_wallet))
     application.add_handler(CommandHandler("signals", cmd_signals))
     application.add_handler(CommandHandler("anomaly", cmd_anomaly))
+    # Fix #3: global error handler
+    application.add_error_handler(on_error)
     return application
 
 
@@ -302,7 +356,8 @@ def main() -> None:
 
     logger.info("Starting SGSMM Telegram bot (long-polling)…")
     application = build_application(token)
-    application.run_polling(allowed_updates=Update.ALL_TYPES)
+    # Fix #4: only handle MESSAGE updates — all handlers are command-based
+    application.run_polling(allowed_updates=[Update.MESSAGE])
 
 
 if __name__ == "__main__":

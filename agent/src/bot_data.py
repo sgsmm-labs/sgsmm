@@ -17,6 +17,7 @@ Verdict semantics (computed at snapshot-build time, re-derivable here):
 from __future__ import annotations
 
 import json
+import os
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -60,22 +61,33 @@ def compute_verdict(
     return "SKIP"
 
 
-@lru_cache(maxsize=4)
-def _load_snapshot_cached(path_str: str) -> dict[str, Any]:
+@lru_cache(maxsize=16)
+def _load_snapshot_cached(path_str: str, _mtime_ns: int) -> dict[str, Any]:
+    """Internal cached loader keyed on (path, mtime_ns) so snapshot rebuilds are
+    picked up automatically without an explicit cache clear."""
     path = Path(path_str)
-    if not path.exists():
-        raise FileNotFoundError(
-            f"snapshot not found at {path}. Generate it with: "
-            "agent\\.venv\\Scripts\\python.exe agent/scripts/build_snapshot.py"
-        )
     with path.open(encoding="utf-8") as fh:
         return json.load(fh)
 
 
 def load_snapshot(path: str | Path | None = None) -> dict[str, Any]:
-    """Load (and memoize) the snapshot JSON. Pass an explicit path in tests."""
-    resolved = str(Path(path) if path is not None else DEFAULT_SNAPSHOT_PATH)
-    return _load_snapshot_cached(resolved)
+    """Load (and memoize) the snapshot JSON. Pass an explicit path in tests.
+
+    The cache is keyed on the file's mtime so a snapshot rebuild during a demo
+    is reflected on the next request without requiring a manual cache clear.
+    """
+    resolved_path = Path(path) if path is not None else DEFAULT_SNAPSHOT_PATH
+    resolved = str(resolved_path)
+    if not resolved_path.exists():
+        raise FileNotFoundError(
+            f"snapshot not found at {resolved_path}. Generate it with: "
+            "agent\\.venv\\Scripts\\python.exe agent/scripts/build_snapshot.py"
+        )
+    try:
+        mtime_ns = os.stat(resolved).st_mtime_ns
+    except OSError:
+        mtime_ns = 0
+    return _load_snapshot_cached(resolved, mtime_ns)
 
 
 def clear_cache() -> None:
