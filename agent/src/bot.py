@@ -206,7 +206,7 @@ async def cmd_wallet(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     lines = [
         f"*Wallet* {_addr_link(record['wallet_address'], full=True)}",
         "",
-        f"{emoji} *Verdict:* {record.get('verdict', 'n/a')}",
+        f"{emoji} *Verdict:* {_md_escape(str(record.get('verdict', 'n/a')))}",
         # Fix #2: cap-consistent Sortino display
         f"*90d Sortino:* {_fmt_sortino(record.get('rolling_90d_sortino'))}",
         # Fix #1: drawdown is a loss — use _fmt_dd (not _fmt_pct which adds "+")
@@ -221,7 +221,7 @@ async def cmd_wallet(update: Update, ctx: ContextTypes.DEFAULT_TYPE) -> None:
     if record.get("win_rate") is not None:
         lines.append(f"*Win rate:* {record['win_rate'] * 100:.0f}%")
     if record.get("reason"):
-        lines.append(f"\n⚠️ _{record['reason']}_")
+        lines.append(f"\n⚠️ _{_md_escape(str(record['reason']))}_")
     await update.message.reply_text("\n".join(lines), parse_mode=ParseMode.MARKDOWN)
 
 
