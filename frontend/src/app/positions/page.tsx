@@ -13,10 +13,21 @@ function sortinoColor(s: number) {
   return "text-red-400";
 }
 
-const verdictConfig: Record<
-  Verdict,
-  { label: string; bg: string; text: string; ring: string }
-> = {
+/** Per-wallet Sortino is clamped at 10 in the backtest; show it as a floor. */
+function formatSortino(s: number) {
+  return s >= 10 ? "≥10" : s.toFixed(2);
+}
+
+type VerdictStyle = { label: string; bg: string; text: string; ring: string };
+
+const NEUTRAL_VERDICT: VerdictStyle = {
+  label: "—",
+  bg: "bg-zinc-800/30",
+  text: "text-zinc-500",
+  ring: "ring-zinc-600/20",
+};
+
+const verdictConfig: Record<Verdict, VerdictStyle> = {
   MIRRORED: {
     label: "MIRRORED",
     bg: "bg-emerald-500/10",
@@ -49,8 +60,7 @@ export default function PositionsPage() {
   const sorted = [...leaderboard].sort((a, b) => b.sortino - a.sortino);
 
   const mirroredCount = sorted.filter((w) => w.verdict === "MIRRORED").length;
-  const avgSortino =
-    sorted.reduce((acc, w) => acc + w.sortino, 0) / sorted.length;
+  const defundedCount = sorted.filter((w) => w.verdict === "DEFUNDED").length;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-black text-zinc-100">
@@ -76,14 +86,14 @@ export default function PositionsPage() {
             { label: "Scored Wallets", value: sorted.length.toString() },
             { label: "Currently Mirrored", value: mirroredCount.toString() },
             {
+              label: "Defunded",
+              value: `${defundedCount}/${sorted.length}`,
+              sublabel: "screened out by the gate",
+            },
+            {
               label: "Entry Gate",
               value: "1.5",
               sublabel: "Sortino min",
-            },
-            {
-              label: "Avg Sortino",
-              value: avgSortino.toFixed(2),
-              sublabel: "across universe",
             },
           ].map((s) => (
             <div
@@ -131,7 +141,7 @@ export default function PositionsPage() {
               </thead>
               <tbody>
                 {sorted.map((w, i) => {
-                  const vc = verdictConfig[w.verdict];
+                  const vc = verdictConfig[w.verdict] ?? NEUTRAL_VERDICT;
                   return (
                     <tr
                       key={w.address}
@@ -149,7 +159,7 @@ export default function PositionsPage() {
                         <span
                           className={`font-semibold tabular-nums ${sortinoColor(w.sortino)}`}
                         >
-                          {w.sortino.toFixed(2)}
+                          {formatSortino(w.sortino)}
                         </span>
                         {/* Sortino bar */}
                         <div className="mt-1 flex justify-end">

@@ -44,7 +44,12 @@ export interface DecisionEntry {
   epoch: number;
   /** Wallet address involved */
   wallet: string;
-  /** On-chain decision type */
+  /**
+   * Decision type. Simulated from the 26-epoch backtest — these are the rows
+   * that WOULD be written to the DecisionLog contract (written + tested; not
+   * yet deployed to Sepolia). The generator only emits ENTER / DEFUND /
+   * EMERGENCY_UNWIND transitions.
+   */
   action: DecisionAction;
   /** Rolling Sortino at time of decision */
   sortino: number;
@@ -90,6 +95,14 @@ export interface VaultState {
   totalDecisionsLogged: number;
   /** Cumulative return since inception, percent */
   cumulativeReturn: number;
+  /** Portfolio-level Sortino across the full backtest (kill-criterion metric) */
+  portfolioSortino: number;
+  /** Worst peak-to-trough drawdown over the window, percent (negative) */
+  maxDrawdownPct: number;
+  /** Whether the strategy clears its own kill-criterion gate (it does not) */
+  passesKillCriterion: boolean;
+  /** Sortino entry gate the kill-criterion is judged against */
+  sortinoGate: number;
 }
 
 // ---------------------------------------------------------------------------

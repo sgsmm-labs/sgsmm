@@ -68,9 +68,12 @@ export default function VaultPage() {
             Capital Partition
           </h1>
           <p className="mt-3 text-sm leading-6 text-zinc-400 max-w-2xl">
-            Real-time breakdown of the SGSMM treasury. The 60% USDY floor is
-            always deployed to Mantle-native yield venues. The sleeve mirrors
-            only Sortino-cleared wallets. The reserve is never deployed.
+            Simulated capital partition from the 26-epoch backtest —{" "}
+            <span className="text-amber-300/90">not a live deployed vault</span>.
+            The intended design: a 60% USDY floor on Mantle-native yield venues,
+            a sleeve that mirrors only Sortino-cleared wallets, and a reserve
+            that is never deployed. Contracts are written + tested; Sepolia
+            deploy pending.
           </p>
         </div>
 

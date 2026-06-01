@@ -11,5 +11,9 @@
   "sleeveVenueLabel": "Agni / Merchant Moe",
   "cycleEpoch": 26,
   "totalDecisionsLogged": 7315,
-  "cumulativeReturn": 0.48
+  "cumulativeReturn": 0.48,
+  "portfolioSortino": 0.51,
+  "maxDrawdownPct": -9.3,
+  "passesKillCriterion": false,
+  "sortinoGate": 1.5
 }

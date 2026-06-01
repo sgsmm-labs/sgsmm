@@ -19,21 +19,30 @@ function bpsToPercent(bps: number) {
   return (bps / 100).toFixed(1) + "%";
 }
 
-const actionConfig: Record<
-  DecisionAction,
-  { label: string; bg: string; text: string; ring: string }
+/** Per-wallet Sortino is clamped at 10 in the backtest; show it as a floor. */
+function formatSortino(s: number) {
+  return s >= 10 ? "≥10" : s.toFixed(2);
+}
+
+type ActionStyle = { label: string; bg: string; text: string; ring: string };
+
+const NEUTRAL_ACTION: ActionStyle = {
+  label: "—",
+  bg: "bg-zinc-800/30",
+  text: "text-zinc-500",
+  ring: "ring-zinc-600/20",
+};
+
+// Only the three actions the generator actually emits are shown. HOLD/SKIP are
+// never written to the feed, so they are intentionally omitted.
+const actionConfig: Partial<
+  Record<DecisionAction, ActionStyle>
 > = {
   ENTER: {
     label: "ENTER",
     bg: "bg-emerald-500/10",
     text: "text-emerald-300",
     ring: "ring-emerald-400/30",
-  },
-  HOLD: {
-    label: "HOLD",
-    bg: "bg-zinc-700/30",
-    text: "text-zinc-300",
-    ring: "ring-zinc-500/20",
   },
   DEFUND: {
     label: "DEFUND",
@@ -47,13 +56,10 @@ const actionConfig: Record<
     text: "text-red-400",
     ring: "ring-red-400/30",
   },
-  SKIP: {
-    label: "SKIP",
-    bg: "bg-zinc-800/30",
-    text: "text-zinc-500",
-    ring: "ring-zinc-600/20",
-  },
 };
+
+// Buckets rendered in the count strip + legend (must match emitted actions).
+const SHOWN_ACTIONS: DecisionAction[] = ["ENTER", "DEFUND", "EMERGENCY_UNWIND"];
 
 export default function DecisionsPage() {
   const decisions = getDecisions();
@@ -70,31 +76,35 @@ export default function DecisionsPage() {
       <main className="mx-auto max-w-5xl px-6 pt-14 pb-32">
         {/* Page header */}
         <div className="mb-10">
-          <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300 ring-1 ring-emerald-400/30">
-            On-Chain Audit Trail · DecisionLog
+          <p className="mb-3 inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-300 ring-1 ring-amber-400/30">
+            Simulated audit trail · DecisionLog (deploy pending)
           </p>
           <h1 className="text-4xl font-semibold tracking-tight">
             Decision Feed
           </h1>
           <p className="mt-3 text-sm leading-6 text-zinc-400 max-w-2xl">
-            Every ENTER, HOLD, DEFUND, EMERGENCY_UNWIND, and SKIP is written
-            to the Mantle DecisionLog contract. Independent observers can
-            reconstruct the full policy from this feed alone.
+            Each ENTER, DEFUND, and EMERGENCY_UNWIND below is a row that{" "}
+            <span className="text-zinc-200">would be written</span> to the Mantle
+            DecisionLog contract (written + tested; Sepolia deploy pending). Once
+            deployed, independent observers reconstruct the full policy from this
+            feed alone.
           </p>
         </div>
 
+        {/* Honest provenance banner */}
+        <div className="mb-8 rounded-xl border border-amber-400/30 bg-amber-500/[0.06] px-4 py-3 text-xs leading-5 text-amber-200/90">
+          <span className="font-semibold uppercase tracking-widest text-amber-300">
+            Simulated — not yet on-chain.
+          </span>{" "}
+          These decisions are replayed from the 26-epoch backtest, not read from
+          a live DecisionLog. The contract is written and tested; the Sepolia
+          deployment is pending.
+        </div>
+
         {/* Action count strip */}
-        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-5">
-          {(
-            [
-              "ENTER",
-              "HOLD",
-              "DEFUND",
-              "EMERGENCY_UNWIND",
-              "SKIP",
-            ] as DecisionAction[]
-          ).map((action) => {
-            const cfg = actionConfig[action];
+        <div className="mb-8 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {SHOWN_ACTIONS.map((action) => {
+            const cfg = actionConfig[action] ?? NEUTRAL_ACTION;
             return (
               <div
                 key={action}
@@ -139,7 +149,7 @@ export default function DecisionsPage() {
               </thead>
               <tbody>
                 {decisions.map((d, i) => {
-                  const cfg = actionConfig[d.action];
+                  const cfg = actionConfig[d.action] ?? NEUTRAL_ACTION;
                   return (
                     <tr
                       key={i}
@@ -172,7 +182,7 @@ export default function DecisionsPage() {
                               : "text-red-400"
                           }
                         >
-                          {d.sortino.toFixed(2)}
+                          {formatSortino(d.sortino)}
                         </span>
                       </td>
                       <td className="px-5 py-4 text-right tabular-nums text-zinc-400">
@@ -198,20 +208,12 @@ export default function DecisionsPage() {
             ENTER — wallet cleared gate; sleeve opened
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-zinc-500" />
-            HOLD — Sortino still above gate; no resize
-          </span>
-          <span className="flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full bg-amber-400" />
             DEFUND — Sortino &lt; 0.5; sleeve closed
           </span>
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-2 w-2 rounded-full bg-red-500" />
             EMERGENCY_UNWIND — forced full exit
-          </span>
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2 w-2 rounded-full bg-zinc-600" />
-            SKIP — evaluated but below gate; no action
           </span>
         </div>
       </main>

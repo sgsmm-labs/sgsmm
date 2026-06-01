@@ -183,6 +183,16 @@ def main() -> None:
         "cycleEpoch": len(epochs),
         "totalDecisionsLogged": int(len(panel)),
         "cumulativeReturn": round(float(summary["total_return"]) * 100.0, 2),
+        # ---- Honest kill-criterion disclosure (mirror summary_real.json) -----
+        # Portfolio-level Sortino across the whole 26-epoch backtest. This is the
+        # number the kill-criterion gate (>= 1.5) is judged on — NOT the clipped
+        # per-wallet "Top Sortino" the leaderboard shows.
+        "portfolioSortino": round(float(summary["sortino"]), 2),
+        # Worst peak-to-trough drawdown over the window, percent (negative).
+        "maxDrawdownPct": round(float(summary["max_drawdown"]) * 100.0, 1),
+        # The strategy does NOT clear its own gate. Surfaced honestly in the UI.
+        "passesKillCriterion": bool(summary.get("passes_kill_criterion", False)),
+        "sortinoGate": SORTINO_ENTRY_THRESHOLD,
     }
 
     # ---- equity.json : NAV vs flat principal reference -----------------------
@@ -201,6 +211,10 @@ def main() -> None:
     print(f"decision events     : {len(decisions)} of {len(events)} transitions")
     print(f"equity points       : {len(equity_pts)}  final NAV={final_nav}")
     print(f"cumulative return   : {vault['cumulativeReturn']}%  decisions logged={vault['totalDecisionsLogged']}")
+    print(
+        f"kill-criterion      : Sortino={vault['portfolioSortino']} (gate>={SORTINO_ENTRY_THRESHOLD}) "
+        f"maxDD={vault['maxDrawdownPct']}%  passes={vault['passesKillCriterion']}"
+    )
 
 
 if __name__ == "__main__":

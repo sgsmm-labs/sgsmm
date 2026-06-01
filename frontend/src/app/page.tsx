@@ -14,7 +14,7 @@ const principles = [
   },
   {
     title: "Not discretionary",
-    body: "Every entry, exit, and resize is mechanical and on-chain-verifiable. Independent observers reconstruct policy from the DecisionLog.",
+    body: "Every entry, exit, and resize is mechanical. Once the DecisionLog contract (written + tested) is deployed, independent observers reconstruct the full policy on-chain.",
   },
 ];
 
@@ -25,6 +25,11 @@ function formatNav(v: number) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(v);
+}
+
+/** Per-wallet Sortino is clamped at 10 in the backtest; show it as a floor. */
+function formatSortino(s: number) {
+  return s >= 10 ? "≥10" : s.toFixed(2);
 }
 
 export default function Home() {
@@ -38,22 +43,22 @@ export default function Home() {
     {
       label: "Vault NAV",
       value: formatNav(vault.nav),
-      subtext: `+${vault.cumulativeReturn}% cumulative return`,
+      subtext: `+${vault.cumulativeReturn}% over ${vault.cycleEpoch} epochs (simulated)`,
     },
     {
-      label: "Top 90d Sortino",
-      value: topSortino.toFixed(2),
-      subtext: "Sortino-gated entry ≥ 1.5",
+      label: "Top Wallet Sortino",
+      value: formatSortino(topSortino),
+      subtext: "Per-wallet, capped at 10 (not portfolio)",
     },
     {
       label: "Active Mirrors",
       value: vault.activeMirrors.toString(),
-      subtext: "Sleeve cap 40% · epoch " + vault.cycleEpoch,
+      subtext: "Sleeve target 30% / cap 40% · epoch " + vault.cycleEpoch,
     },
     {
       label: "Decisions Logged",
       value: vault.totalDecisionsLogged.toLocaleString(),
-      subtext: "Cycle " + vault.cycleEpoch + " · on-chain audit",
+      subtext: "Cycle " + vault.cycleEpoch + " · simulated (deploy pending)",
     },
   ];
 
@@ -62,16 +67,13 @@ export default function Home() {
   const sgReturn = lastPoint && firstPoint
     ? (((lastPoint.nav - firstPoint.nav) / firstPoint.nav) * 100).toFixed(2)
     : "—";
-  const baseReturn = lastPoint && firstPoint
-    ? (((lastPoint.baselineNav - firstPoint.baselineNav) / firstPoint.baselineNav) * 100).toFixed(2)
-    : "—";
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-black text-zinc-100">
       <Nav />
 
       <main className="mx-auto max-w-6xl px-6 pt-16 pb-32">
-        <section className="mb-16">
+        <section className="mb-10">
           <p className="mb-4 inline-flex items-center gap-2 rounded-full bg-violet-500/10 px-3 py-1 text-xs font-medium text-violet-300 ring-1 ring-violet-400/30">
             Alpha & Data · Path B · Mirana Ventures Track
           </p>
@@ -82,10 +84,54 @@ export default function Home() {
             </span>
           </h1>
           <p className="mt-6 max-w-3xl text-pretty text-lg leading-8 text-zinc-300">
-            SGSMM scores on-chain managers via rolling downside-adjusted returns,
-            routes capital through Mantle-native venues, and gives Mirana real-time
-            visibility into how managers compound capital. Every entry, exit, and
-            resize is mechanical and verifiable on Mantle.
+            SGSMM is an infrastructure + methodology demonstration, not a
+            profitability claim. It scores on-chain managers via rolling
+            downside-adjusted returns and routes capital through Mantle-native
+            venues. The full policy is mechanical and reconstructable — but on
+            this 26-epoch backtest the strategy does <span className="font-semibold text-zinc-100">not</span> clear its own
+            risk gate, and we surface that honestly below.
+          </p>
+        </section>
+
+        {/* Kill-criterion disclosure — the strategy fails its own gate. */}
+        <section className="mb-16 rounded-2xl border border-amber-400/30 bg-amber-500/[0.06] p-6">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-amber-300 ring-1 ring-amber-400/40">
+              Kill-criterion NOT cleared
+            </span>
+            <span className="text-xs text-zinc-400">
+              26-epoch backtest · contracts written + tested · Sepolia deploy pending
+            </span>
+          </div>
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="rounded-xl border border-white/[0.06] bg-black/20 p-4">
+              <p className="text-xs uppercase tracking-widest text-zinc-500">
+                Portfolio Sortino
+              </p>
+              <p className="mt-1 text-3xl font-semibold tabular-nums text-amber-300">
+                {vault.portfolioSortino.toFixed(2)}
+              </p>
+              <p className="mt-1 text-xs text-zinc-400">
+                below the {vault.sortinoGate.toFixed(1)} gate — kill-criterion not met
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/[0.06] bg-black/20 p-4">
+              <p className="text-xs uppercase tracking-widest text-zinc-500">
+                Max Drawdown
+              </p>
+              <p className="mt-1 text-3xl font-semibold tabular-nums text-amber-300">
+                {vault.maxDrawdownPct.toFixed(1)}%
+              </p>
+              <p className="mt-1 text-xs text-zinc-400">
+                worst peak-to-trough over the {vault.cycleEpoch}-epoch window
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-xs leading-5 text-zinc-500">
+            Honest framing: the value here is the infrastructure and methodology
+            (Sortino-gated scoring, layered vault, mechanical DecisionLog), not a
+            track record. The portfolio Sortino above is the metric the gate is
+            judged on — distinct from the per-wallet &ldquo;Top Sortino&rdquo; (capped at 10).
           </p>
         </section>
 
@@ -115,8 +161,8 @@ export default function Home() {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="inline-block h-2 w-2 rounded-full bg-violet-500" />
-                Principal{" "}
-                <span className="text-violet-300 font-medium">+{baseReturn}%</span>
+                <span className="text-violet-300 font-medium">$100k principal</span>{" "}
+                reference
               </span>
             </div>
           </div>

@@ -17,7 +17,7 @@ interface Props {
 }
 
 function formatNav(v: number) {
-  return "$" + (v / 1_000_000).toFixed(3) + "M";
+  return "$" + (v / 1_000).toFixed(1) + "k";
 }
 
 function formatNavShort(v: number) {
