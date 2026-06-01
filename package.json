@@ -8,11 +8,16 @@
   "engines": {
     "node": ">=22.0.0"
   },
+  "pnpm": {
+    "overrides": {
+      "@hono/node-server": ">=1.19.13"
+    }
+  },
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "pnpm -r --if-present build",
     "dev": "pnpm -r --parallel dev",
-    "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
+    "test": "pnpm -r --if-present test && echo 'NOTE: contracts → forge test | backtest/agent → pytest in their venvs'",
+    "lint": "pnpm -r --if-present lint",
     "indexer:dev": "pnpm --filter @sgsmm/indexer dev",
     "frontend:dev": "pnpm --filter @sgsmm/frontend dev"
   }
