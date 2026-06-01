@@ -45,15 +45,24 @@ PANEL_COLUMNS = [
 
 def _rolling_sortino(
     returns: pd.Series,
-    window_days: int,
+    window: str,
     min_obs: int,
     min_downside_obs: int = 3,
     cap: float = 10.0,
 ) -> pd.Series:
     """
-    Trailing-window Sortino over a daily return series (positional window).
+    Trailing-window Sortino over a daily return series (calendar window).
+
+    `window` is a pandas time offset (e.g. "90D"): the lookback is trailing-90
+    *calendar* days, evaluated on `returns`' DatetimeIndex, not a fixed row count.
+    On a dataset that spans fewer than 90 days the realized window is the data
+    span — the metric is honestly *defined* as trailing-90d and simply has not
+    accumulated 90 days of history yet.
 
     Hardened for short/real windows:
+      - require >= `min_obs` observations in-window before the ratio is emitted
+        (sortino_ratio returns NaN below that — an under-powered window yields
+        NaN, never an exploded ratio);
       - require >= `min_downside_obs` negative returns in-window before the ratio
         is trusted; a Sortino estimated from 0-1 downside samples is statistically
         meaningless and otherwise explodes to 1e4+ on a recent winning streak
@@ -62,8 +71,10 @@ def _rolling_sortino(
         and its exact magnitude is noise that shouldn't propagate downstream.
     """
 
-    def _one(window: object) -> float:
-        s = pd.Series(window)
+    def _one(window_vals: object) -> float:
+        s = pd.Series(window_vals)
+        if len(s) < min_obs:
+            return float("nan")
         if int((s < 0).sum()) < min_downside_obs:
             return float("nan")
         val = sortino_ratio(s, cadence="daily", min_observations=min_obs)
@@ -71,26 +82,33 @@ def _rolling_sortino(
             return float("nan")
         return float(max(-cap, min(cap, val)))
 
-    return returns.rolling(window=window_days, min_periods=min_obs).apply(_one, raw=False)
+    # Time-offset rolling requires a monotonic DatetimeIndex (guaranteed by the
+    # caller, which sorts each wallet's series by day). min_periods gates the
+    # in-window observation count; the offset gates the calendar lookback.
+    return returns.rolling(window=window, min_periods=min_obs).apply(_one, raw=False)
 
 
-def _rolling_dd(returns: pd.Series, window_days: int) -> pd.Series:
+def _rolling_dd(returns: pd.Series, window: str) -> pd.Series:
     """
     Trailing-window max drawdown of the equity index built from `returns`,
     returned as a positive fraction (0.12 == a 12% drawdown).
+
+    `window` is a pandas time offset (e.g. "30D"): trailing-30 *calendar* days
+    over the wallet's DatetimeIndex, so the drawdown lookback is correctly
+    defined as a calendar window (realized span <= data span on short datasets).
     """
     equity = (1.0 + returns.fillna(0.0)).cumprod()
-    dd = equity.rolling(window=window_days, min_periods=2).apply(max_drawdown, raw=False)
+    dd = equity.rolling(window=window, min_periods=2).apply(max_drawdown, raw=False)
     return (-dd).clip(lower=0.0)
 
 
 def build_panel(
     pnl_panel: pd.DataFrame,
     label_scores: dict[str, float] | None = None,
-    sortino_window_days: int = 90,
-    dd_window_days: int = 30,
-    obs_window_days: int = 90,
-    min_obs_for_sortino: int = 10,
+    sortino_window: str = "90D",
+    dd_window: str = "30D",
+    obs_window: str = "90D",
+    min_obs_for_sortino: int = 20,
     min_downside_obs_for_sortino: int = 3,
     sortino_cap: float = 10.0,
     default_label_score: float = 1.0,
@@ -103,9 +121,18 @@ def build_panel(
             realized_pnl_usd, risky_value_end, n_trades).
         label_scores: optional {wallet -> label_score} (Nansen/ML at P2). Wallets
             absent from the mapping get `default_label_score`.
-        sortino_window_days / dd_window_days / obs_window_days: rolling windows.
+        sortino_window / dd_window / obs_window: rolling windows as pandas time
+            offsets (e.g. "90D", "30D"). They are calendar-aware (evaluated on the
+            wallet's DatetimeIndex), so each metric is defined as a trailing-N
+            *calendar-day* window. On this dataset, which spans only ~26 daily
+            epochs, the realized window is the data span (< 90/30 days) — that is
+            honest: the column means "trailing 90 calendar days" and simply has
+            not accumulated 90 days of history.
         min_obs_for_sortino: minimum daily returns in-window before Sortino is
             defined (NaN below this; classifier then treats the wallet as SKIP).
+            Set to 20 to match the classifier's n_observed gate and sortino.py's
+            documented minimum, so Sortino is only emitted on adequately-powered
+            windows (under-powered windows -> NaN, never an exploded ratio).
         min_downside_obs_for_sortino: minimum in-window negative returns before
             the Sortino ratio is trusted (NaN below this). Guards against the
             ratio exploding on a short all-/mostly-winning streak, which would
@@ -131,13 +158,15 @@ def build_panel(
 
         rolling_sortino = _rolling_sortino(
             returns,
-            sortino_window_days,
+            sortino_window,
             min_obs_for_sortino,
             min_downside_obs=min_downside_obs_for_sortino,
             cap=sortino_cap,
         )
-        rolling_obs = n_trades.rolling(window=obs_window_days, min_periods=1).sum()
-        rolling_dd_30 = _rolling_dd(returns, dd_window_days)
+        # Calendar-aware trailing trade count (the "90d observations" gate),
+        # evaluated on the same DatetimeIndex as the Sortino/DD windows.
+        rolling_obs = n_trades.rolling(window=obs_window, min_periods=1).sum()
+        rolling_dd_30 = _rolling_dd(returns, dd_window)
 
         frame = pd.DataFrame(
             {

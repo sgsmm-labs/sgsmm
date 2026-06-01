@@ -93,45 +93,61 @@ export default function Home() {
           </p>
         </section>
 
-        {/* Kill-criterion disclosure — the strategy fails its own gate. */}
+        {/* Kill-criterion disclosure — NOT cleared: a 90-day gate cannot be
+            validated on a 26-epoch window (positions only open once it can fire). */}
         <section className="mb-16 rounded-2xl border border-amber-400/30 bg-amber-500/[0.06] p-6">
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 px-3 py-1 text-xs font-semibold uppercase tracking-widest text-amber-300 ring-1 ring-amber-400/40">
-              Kill-criterion NOT cleared
+              Kill-criterion NOT cleared — insufficient data
             </span>
             <span className="text-xs text-zinc-400">
-              26-epoch backtest · contracts written + tested · Sepolia deploy pending
+              {vault.cycleEpoch}-epoch backtest · only {vault.nActiveEpochs} active epochs · a 90-day gate needs ≥90 days to validate
             </span>
           </div>
-          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="rounded-xl border border-white/[0.06] bg-black/20 p-4">
               <p className="text-xs uppercase tracking-widest text-zinc-500">
-                Portfolio Sortino
+                Strategy alpha Sortino
               </p>
               <p className="mt-1 text-3xl font-semibold tabular-nums text-amber-300">
-                {vault.portfolioSortino.toFixed(2)}
+                {vault.alphaSortino != null ? vault.alphaSortino.toFixed(2) : "—"}
               </p>
               <p className="mt-1 text-xs text-zinc-400">
-                below the {vault.sortinoGate.toFixed(1)} gate — kill-criterion not met
+                sleeve only, USDY floor stripped — over just {vault.nActiveEpochs} active epochs
               </p>
             </div>
             <div className="rounded-xl border border-white/[0.06] bg-black/20 p-4">
               <p className="text-xs uppercase tracking-widest text-zinc-500">
-                Max Drawdown
+                Blended portfolio Sortino
               </p>
-              <p className="mt-1 text-3xl font-semibold tabular-nums text-amber-300">
-                {vault.maxDrawdownPct.toFixed(1)}%
+              <p className="mt-1 text-3xl font-semibold tabular-nums text-zinc-300">
+                {vault.portfolioSortino.toFixed(2)}
               </p>
               <p className="mt-1 text-xs text-zinc-400">
-                worst peak-to-trough over the {vault.cycleEpoch}-epoch window
+                incl. the 60% USDY floor yield — which lifts the ratio
+              </p>
+            </div>
+            <div className="rounded-xl border border-white/[0.06] bg-black/20 p-4">
+              <p className="text-xs uppercase tracking-widest text-zinc-500">
+                Active epochs
+              </p>
+              <p className="mt-1 text-3xl font-semibold tabular-nums text-amber-300">
+                {vault.nActiveEpochs}/{vault.cycleEpoch}
+              </p>
+              <p className="mt-1 text-xs text-zinc-400">
+                the 90d gate can&rsquo;t fire until ~epoch 20 on 26 days of data
               </p>
             </div>
           </div>
           <p className="mt-4 text-xs leading-5 text-zinc-500">
-            Honest framing: the value here is the infrastructure and methodology
-            (Sortino-gated scoring, layered vault, mechanical DecisionLog), not a
-            track record. The portfolio Sortino above is the metric the gate is
-            judged on — distinct from the per-wallet &ldquo;Top Sortino&rdquo; (capped at 10).
+            Honest framing: the strategy shows{" "}
+            <span className="text-zinc-300">promising alpha</span> (+{vault.cumulativeReturn}% blended return), but a 90-day-gated policy
+            cannot be validated on {vault.cycleEpoch} epochs — positions only open in the final{" "}
+            {vault.nActiveEpochs}. So both Sortinos above, though &gt; 1.5, are statistically
+            too thin to count, and the gate is <span className="text-amber-300">NOT cleared</span>{" "}
+            (needs ≥90 days of data). The real value is the verifiable infrastructure +
+            methodology — Sortino scoring, layered vault, and the mechanical on-chain
+            DecisionLog — not a track record.
           </p>
         </section>
 

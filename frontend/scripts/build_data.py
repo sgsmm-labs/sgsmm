@@ -184,10 +184,24 @@ def main() -> None:
         "totalDecisionsLogged": int(len(panel)),
         "cumulativeReturn": round(float(summary["total_return"]) * 100.0, 2),
         # ---- Honest kill-criterion disclosure (mirror summary_real.json) -----
-        # Portfolio-level Sortino across the whole 26-epoch backtest. This is the
-        # number the kill-criterion gate (>= 1.5) is judged on — NOT the clipped
-        # per-wallet "Top Sortino" the leaderboard shows.
+        # BLENDED portfolio-level Sortino across the whole 26-epoch backtest,
+        # including the always-on 60% USDY floor. The floor's smooth, zero-
+        # downside yield inflates this number, so it is NOT proof of alpha — it
+        # is surfaced only for transparency, NOT the value the gate is judged on.
         "portfolioSortino": round(float(summary["sortino"]), 2),
+        # ALPHA (strategy-only) Sortino = derived from nav-minus-floor. This is
+        # the honest number the kill-criterion gate (>= 1.5) is actually judged
+        # on. May be null when there is no alpha movement yet (floor-only window).
+        "alphaSortino": (
+            None
+            if summary.get("alpha_sortino") is None or pd.isna(summary.get("alpha_sortino"))
+            else round(float(summary["alpha_sortino"]), 2)
+        ),
+        # Count of epochs where the mirror sleeve actually held capital ("on").
+        "nActiveEpochs": int(summary.get("n_active_epochs", 0)),
+        # Whether the window is long enough (>= 90 epochs) to validly test a
+        # 90-day-gated strategy. FALSE here => the verdict cannot be a real pass.
+        "sufficientData": bool(summary.get("sufficient_data", False)),
         # Worst peak-to-trough drawdown over the window, percent (negative).
         "maxDrawdownPct": round(float(summary["max_drawdown"]) * 100.0, 1),
         # The strategy does NOT clear its own gate. Surfaced honestly in the UI.
@@ -212,7 +226,9 @@ def main() -> None:
     print(f"equity points       : {len(equity_pts)}  final NAV={final_nav}")
     print(f"cumulative return   : {vault['cumulativeReturn']}%  decisions logged={vault['totalDecisionsLogged']}")
     print(
-        f"kill-criterion      : Sortino={vault['portfolioSortino']} (gate>={SORTINO_ENTRY_THRESHOLD}) "
+        f"kill-criterion      : blendedSortino={vault['portfolioSortino']} "
+        f"alphaSortino={vault['alphaSortino']} (gate>={SORTINO_ENTRY_THRESHOLD}) "
+        f"activeEpochs={vault['nActiveEpochs']} sufficientData={vault['sufficientData']} "
         f"maxDD={vault['maxDrawdownPct']}%  passes={vault['passesKillCriterion']}"
     )
 

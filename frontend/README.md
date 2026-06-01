@@ -4,7 +4,7 @@ Next.js 16 dashboard for the Sortino-Gated Smart Money Mirror. It visualizes the
 **real backtest output** — vault capital partition, smart-money leaderboard,
 decision feed, and the equity curve — and is honest about the result: on the
 26-epoch window the strategy does **not** clear its kill-criterion gate
-(portfolio Sortino ≈ 0.51 vs ≥ 1.5; max drawdown ≈ 9.3%).
+`passes_kill_criterion = false` — a 90-day gate can't be validated on a 26-epoch window (positions open in only ~7 epochs), so the promising sleeve-alpha Sortino ≈ 3.3 is statistically too thin to count.
 
 > The dashboard is a **simulation / methodology demo**, not a live deployed
 > vault. The contracts are written + tested but not yet deployed.
@@ -53,8 +53,8 @@ Run this after re-running the backtest so the dashboard reflects the latest snap
 
 Routes (`src/app/`):
 
-- `page.tsx` — home: vault NAV, the kill-criterion disclosure banner (Sortino
-  0.51, NOT cleared), key stats, and the equity-curve chart
+- `page.tsx` — home: vault NAV, the kill-criterion disclosure banner (NOT
+  cleared — insufficient window), key stats, and the equity-curve chart
 - `vault/page.tsx` — simulated capital partition (60% floor / 30% sleeve / 10% reserve)
 - `positions/page.tsx` — smart-money leaderboard table (Sortino, drawdown, verdict)
 - `decisions/page.tsx` — decision feed (simulated; "would be written to the

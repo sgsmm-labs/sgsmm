@@ -1,9 +1,9 @@
 {
-  "nav": 100475.78,
+  "nav": 102120.0,
   "floorPct": 60,
   "sleevePct": 30,
   "reservePct": 10,
-  "activeMirrors": 82,
+  "activeMirrors": 60,
   "lastRebalance": "2025-12-26T00:00:00Z",
   "nextRebalance": "2025-12-27T00:00:00Z",
   "floorAsset": "USDY",
@@ -11,9 +11,12 @@
   "sleeveVenueLabel": "Agni / Merchant Moe",
   "cycleEpoch": 26,
   "totalDecisionsLogged": 7315,
-  "cumulativeReturn": 0.48,
-  "portfolioSortino": 0.51,
-  "maxDrawdownPct": -9.3,
+  "cumulativeReturn": 2.12,
+  "portfolioSortino": 3.34,
+  "alphaSortino": 3.26,
+  "nActiveEpochs": 7,
+  "sufficientData": false,
+  "maxDrawdownPct": -3.5,
   "passesKillCriterion": false,
   "sortinoGate": 1.5
 }

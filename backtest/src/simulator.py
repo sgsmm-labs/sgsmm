@@ -49,9 +49,15 @@ class SimState:
     reserve_value: float        # 10% reserve buffer (never deployed except under stress)
     positions: dict[str, Position] = field(default_factory=dict)
     equity_curve: list[tuple[datetime, float]] = field(default_factory=list)
+    # Parallel per-epoch decompositions (same order/length as equity_curve).
+    # Recorded so summarize_run can isolate the strategy's ALPHA (nav - floor)
+    # from the always-on USDY floor yield, which otherwise inflates the Sortino.
+    floor_curve: list[float] = field(default_factory=list)    # USDY floor value per epoch
+    sleeve_curve: list[float] = field(default_factory=list)   # mirror sleeve value per epoch
     decisions: list[dict] = field(default_factory=list)
     is_frozen: bool = False     # true if vault DD > 5% within cooldown
     freeze_until: Optional[datetime] = None
+    floor_annual_apy: float = 0.05  # USDY yield assumption used for the floor (for honest disclosure)
 
 
 def _floor_apy_per_epoch(annual_apy: float, epoch_hours: int) -> float:
@@ -99,6 +105,7 @@ def run_backtest(
         deployable_value=initial_nav * deployable_share,
         sleeve_value=0.0,
         reserve_value=initial_nav * cfg.reserve_buffer,
+        floor_annual_apy=floor_annual_apy,
     )
 
     floor_epoch_return = _floor_apy_per_epoch(floor_annual_apy, epoch_hours)
@@ -208,35 +215,115 @@ def run_backtest(
             + state.reserve_value
         )
         state.equity_curve.append((epoch, state.nav))
+        # Parallel decomposition (kept in lock-step with equity_curve) so the
+        # strategy's alpha (nav - floor) can be isolated from the USDY floor.
+        state.floor_curve.append(state.floor_value)
+        state.sleeve_curve.append(state.sleeve_value)
 
     return state
 
 
 def summarize_run(state: SimState, initial_nav: float = 100_000.0) -> dict:
-    """Compute headline metrics for kill-criterion check."""
+    """
+    Compute headline metrics for the kill-criterion check.
+
+    Reports TWO views, honestly separated:
+
+    * BLENDED ("total_return"/"sortino"/"max_drawdown") — the full vault
+      including the always-on 60% USDY floor. The floor contributes a smooth,
+      strictly-positive, zero-downside yield stream that mechanically inflates a
+      Sortino ratio. On a short window where the 90-day/20-observation gate
+      cannot fire for most epochs, the blended Sortino is an ARTIFACT of the
+      floor, not evidence of strategy alpha. Kept for transparency only.
+
+    * ALPHA ("alpha_return"/"alpha_sortino"/"alpha_max_drawdown") — derived from
+      the non-floor equity series (nav - floor) so the strategy is judged on its
+      OWN returns. Flat floor-only epochs net to ~0 alpha return (zero excess,
+      zero downside) instead of a positive day, so they no longer inflate it.
+
+    The kill-criterion is gated on the ALPHA Sortino at the advertised 1.5
+    threshold AND on having enough data to validly test a 90-day-gated strategy.
+    """
     if not state.equity_curve:
         return {"error": "no epochs processed"}
 
-    equity_series = pd.Series(
-        [eq for _, eq in state.equity_curve],
-        index=[t for t, _ in state.equity_curve],
-    )
-    period_returns = equity_series.pct_change().dropna()
+    nav_values = [eq for _, eq in state.equity_curve]
+    index = [t for t, _ in state.equity_curve]
+    equity_series = pd.Series(nav_values, index=index)
 
+    # ---- BLENDED view (full vault incl. USDY floor) -------------------------
+    period_returns = equity_series.pct_change().dropna()
     sortino = sortino_ratio(period_returns, cadence="daily")
     mdd = max_drawdown(equity_series)
     total_return = float(equity_series.iloc[-1] / initial_nav - 1)
+
+    # ---- ALPHA view (strategy only: nav - floor) ----------------------------
+    # floor_curve is kept in lock-step with equity_curve; fall back gracefully
+    # if it is somehow shorter (older states) by padding with the floor share.
+    if state.floor_curve and len(state.floor_curve) == len(nav_values):
+        floor_values = list(state.floor_curve)
+    else:
+        floor_values = [0.0] * len(nav_values)
+    alpha_values = [nav - flr for nav, flr in zip(nav_values, floor_values)]
+    alpha_series = pd.Series(alpha_values, index=index)
+    alpha_base = alpha_values[0] if alpha_values and alpha_values[0] != 0 else float("nan")
+
+    alpha_period_returns = alpha_series.pct_change().dropna()
+    alpha_sortino = sortino_ratio(alpha_period_returns, cadence="daily")
+    alpha_max_drawdown = max_drawdown(alpha_series)
+    alpha_return = (
+        float(alpha_values[-1] / alpha_base - 1) if not np.isnan(alpha_base) else float("nan")
+    )
+
+    # Epochs where the mirror sleeve actually held capital (strategy was "on").
+    if state.sleeve_curve and len(state.sleeve_curve) == len(nav_values):
+        n_active_epochs = int(sum(1 for v in state.sleeve_curve if v > 0))
+    else:
+        n_active_epochs = 0
+
+    n_epochs = len(equity_series)
     n_decisions = len(state.decisions)
 
+    # ---- HONEST kill-criterion ----------------------------------------------
+    # A 90-day-gated strategy cannot be validly tested on far fewer than 90
+    # epochs: the entry gate (rolling 90d Sortino + >=20 observations) physically
+    # cannot fire until late in a short window, so most epochs are floor-only.
+    sufficient_data = n_epochs >= 90
+    passes_kill_criterion = bool(
+        sufficient_data
+        and (not np.isnan(alpha_sortino))
+        and (alpha_sortino >= 1.5)
+        and (abs(alpha_max_drawdown) <= 0.15)
+        and (n_active_epochs >= 20)
+    )
+
+    verdict_note = (
+        f"BLENDED Sortino {sortino:.2f} is lifted by the always-on 60% USDY floor "
+        f"(~{state.floor_annual_apy:.0%} APY, zero-downside) and is NOT proof of alpha. "
+        f"The strategy's own ALPHA Sortino is "
+        f"{('n/a' if np.isnan(alpha_sortino) else f'{alpha_sortino:.2f}')} over only "
+        f"{n_active_epochs} active epoch(s). This {n_epochs}-epoch window is too short to "
+        f"validly test a 90-day-gated strategy (need >= 90 epochs), so the gate cannot fire "
+        f"for most epochs. passes_kill_criterion is therefore "
+        f"{'TRUE' if passes_kill_criterion else 'FALSE'} (insufficient data / too few active "
+        f"epochs) — the correct, honest result."
+    )
+
     return {
+        # --- BLENDED full-vault view (incl. USDY floor) ---
         "total_return": total_return,
         "max_drawdown": mdd,
         "sortino": sortino,
-        "n_epochs": len(equity_series),
+        # --- ALPHA strategy-only view (nav - floor) ---
+        "alpha_return": alpha_return,
+        "alpha_sortino": alpha_sortino,
+        "alpha_max_drawdown": alpha_max_drawdown,
+        "n_active_epochs": n_active_epochs,
+        # --- context / honesty ---
+        "n_epochs": n_epochs,
         "n_decisions": n_decisions,
-        "passes_kill_criterion": (
-            (not np.isnan(sortino))
-            and sortino >= 1.0  # relaxed kill threshold; ≥1.5 = ideal
-            and abs(mdd) <= 0.15  # relaxed max DD = 15% (8% is the ideal target)
-        ),
+        "sufficient_data": sufficient_data,
+        "floor_apy_assumption": state.floor_annual_apy,
+        "passes_kill_criterion": passes_kill_criterion,
+        "verdict_note": verdict_note,
     }

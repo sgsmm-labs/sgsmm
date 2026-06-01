@@ -51,82 +51,82 @@
   },
   {
     "epoch": 11,
-    "nav": 99696.55,
+    "nav": 100088.29,
     "baselineNav": 100000
   },
   {
     "epoch": 12,
-    "nav": 105676.79,
+    "nav": 100096.32,
     "baselineNav": 100000
   },
   {
     "epoch": 13,
-    "nav": 103279.21,
+    "nav": 100104.35,
     "baselineNav": 100000
   },
   {
     "epoch": 14,
-    "nav": 103706.64,
+    "nav": 100112.39,
     "baselineNav": 100000
   },
   {
     "epoch": 15,
-    "nav": 95823.59,
+    "nav": 100120.43,
     "baselineNav": 100000
   },
   {
     "epoch": 16,
-    "nav": 99586.53,
+    "nav": 100128.46,
     "baselineNav": 100000
   },
   {
     "epoch": 17,
-    "nav": 99602.54,
+    "nav": 100136.5,
     "baselineNav": 100000
   },
   {
     "epoch": 18,
-    "nav": 99065.71,
+    "nav": 100144.54,
     "baselineNav": 100000
   },
   {
     "epoch": 19,
-    "nav": 99247.53,
+    "nav": 100152.58,
     "baselineNav": 100000
   },
   {
     "epoch": 20,
-    "nav": 99983.85,
+    "nav": 100160.62,
     "baselineNav": 100000
   },
   {
     "epoch": 21,
-    "nav": 100134.6,
+    "nav": 102316.69,
     "baselineNav": 100000
   },
   {
     "epoch": 22,
-    "nav": 100424.15,
+    "nav": 102671.87,
     "baselineNav": 100000
   },
   {
     "epoch": 23,
-    "nav": 99184.66,
+    "nav": 101071.92,
     "baselineNav": 100000
   },
   {
     "epoch": 24,
-    "nav": 98348.59,
+    "nav": 99102.52,
     "baselineNav": 100000
   },
   {
     "epoch": 25,
-    "nav": 100310.86,
+    "nav": 101781.6,
     "baselineNav": 100000
   },
   {
     "epoch": 26,
-    "nav": 100475.78,
+    "nav": 102120.0,
     "baselineNav": 100000
   }
 ]

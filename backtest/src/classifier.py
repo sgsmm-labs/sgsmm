@@ -5,7 +5,7 @@ Implements the policy spec from docs-private/strategy-spec.md:
 - label_score >= 0.7
 - rolling_90d_sortino >= 1.5
 - n_observed_positions_90d >= 20
-- defund trigger if Sortino < 0.5 OR realized_DD_30d > 15%
+- defund trigger if Sortino < 0.5 OR realized_DD_30d >= 15%
 
 Inputs are per-wallet snapshots; outputs are eligibility flags + sizing.
 """
@@ -39,7 +39,7 @@ class ClassifierConfig:
     min_observed_positions_90d: int = 20
 
     # Defund triggers
-    realized_dd_30d_threshold: float = 0.15  # > 15% triggers emergency unwind
+    realized_dd_30d_threshold: float = 0.15  # >= 15% triggers emergency unwind
     sortino_decay_epochs: int = 3            # unwind linearly over this many epochs
 
     # Vault-level safety
@@ -78,8 +78,10 @@ def classify_wallet(
     """
     cfg = config or ClassifierConfig()
 
-    # 1. Emergency unwind: realized drawdown over 30 days
-    if snapshot.current_allocation_pct > 0 and snapshot.realized_dd_30d > cfg.realized_dd_30d_threshold:
+    # 1. Emergency unwind: realized drawdown over 30 days.
+    # Risk-conservative boundary: >= the threshold (matches agent/src/bot_data.py
+    # and agent/scripts/build_snapshot.py, so all three agree at exactly 0.15).
+    if snapshot.current_allocation_pct > 0 and snapshot.realized_dd_30d >= cfg.realized_dd_30d_threshold:
         return EligibilityAction.EMERGENCY_UNWIND
 
     # 2. Sortino decay defund (linear over multiple epochs)

@@ -227,7 +227,7 @@ See `contracts/README.md` for full deployment guide.
 
 SGSMM was run end-to-end on a **preliminary 26-epoch window** of real Mantle DEX trade data (~300,000 trades) pulled via Dune (`dex.trades`). This is an **infrastructure + methodology demonstration, not a profitability claim.**
 
-**Honest result:** on this window the mirrored book does **not** clear its own kill-criterion gate — realized rolling-90d Sortino lands ≈ **0.5** (target ≥ 1.5) and max drawdown ≈ **9%**. The value here is that the full pipeline (Dune trades → FIFO PnL → rolling Sortino → gate → decision panel → bot / dashboard / on-chain log) runs on real on-chain data and reports the verdict mechanically — including when the verdict is "skip."
+**Honest result:** on this **26-epoch** window the strategy does **not** clear its kill-criterion gate — and the *reason* matters. A 90-day-gated policy needs ≥ 90 days of data; on 26 days the gate can only fire near the end, so the sleeve actually holds positions in just **7 of 26 epochs**. Over that thin window the strategy shows *promising* alpha (sleeve-only Sortino ≈ **3.3**; blended ≈ **3.3** including the 60% USDY floor that lifts the ratio) — but 7 active epochs is far too few to validate, so `passes_kill_criterion = false`. The value here is that the full pipeline (Dune trades → FIFO PnL → rolling Sortino → gate → decision panel → bot / dashboard / on-chain log) runs on real on-chain data and reports the verdict mechanically — including when the honest verdict is "insufficient data."
 
 **What works today:**
 - Backtest runner implements and *evaluates* the kill-criterion gate (Sortino ≥ 1.5, plus drawdown / win-rate / trade-count floors) on real trades

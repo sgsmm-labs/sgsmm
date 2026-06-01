@@ -3,7 +3,7 @@
 High-level overview of the system design and component interactions. This document describes the **architecture and infrastructure**, not deployment status. See the root README for current status.
 
 > **IMPORTANT: Current Status**  
-> Contracts are **written and tested** (35 passing tests, see `contracts/test/`) but **NOT YET DEPLOYED** to Mantle Sepolia. The indexer runs locally on Lendle lending events + L1 bridge arrivals. The strategy is validated via backtest on real historical data but does **not yet clear its kill-criterion gate** (realized Sortino 0.51 vs required 1.5). This document describes the full system design *as intended*, not the current operational state.
+> Contracts are **written and tested** (see `contracts/test/`) but **NOT YET DEPLOYED** to Mantle Sepolia. The indexer runs locally on Lendle lending events + L1 bridge arrivals. The strategy is validated via backtest on real historical data but does **not yet clear its kill-criterion gate** — a 90-day-gated policy cannot be validated on the 26-epoch window (positions open in only ~7 of 26 epochs; needs ≥90 days), so `passes_kill_criterion = false` despite a promising sleeve-alpha Sortino ≈ 3.3. This document describes the full system design *as intended*, not the current operational state.
 
 ## Components
 

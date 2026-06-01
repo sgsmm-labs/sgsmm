@@ -103,6 +103,12 @@ export interface VaultState {
   passesKillCriterion: boolean;
   /** Sortino entry gate the kill-criterion is judged against */
   sortinoGate: number;
+  /** Sleeve-only (floor-stripped) Sortino — the strategy's real alpha; null on a floor-only window */
+  alphaSortino: number | null;
+  /** Epochs in which the sleeve actually held positions (out of cycleEpoch) */
+  nActiveEpochs: number;
+  /** Whether the window is long enough (>=90 epochs) to validly test a 90-day gate */
+  sufficientData: boolean;
 }
 
 // ---------------------------------------------------------------------------

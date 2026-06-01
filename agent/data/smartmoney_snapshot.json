@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-05-30T20:05:16.417195+00:00",
+    "generated_at": "2026-06-01T08:30:59.693182+00:00",
     "source": "backtest/results/panel_real.csv (real Mantle DEX trades)",
     "latest_epoch": "2025-12-26 00:00:00+00:00",
     "total_wallets": 363,
@@ -13,10 +13,10 @@
       "realized_dd_30d_threshold": 0.15
     },
     "verdict_counts": {
-      "ENTER": 82,
+      "ENTER": 60,
       "EMERGENCY_UNWIND": 139,
-      "SKIP": 3,
-      "DEFUND": 139
+      "SKIP": 2,
+      "DEFUND": 162
     }
   },
   "leaderboard": [
@@ -144,20 +144,6 @@
       "cumulative_return": 6.536177,
       "win_rate": 0.5385,
       "peak_dd_30d": 0.264,
-      "last_epoch": "2025-12-26 00:00:00+00:00"
-    },
-    {
-      "wallet_address": "0x62b4ffcc15802d337ecc4107c44aa5c8c44f2830",
-      "verdict": "EMERGENCY_UNWIND",
-      "label_score": 1.0,
-      "rolling_90d_sortino": 10.0,
-      "n_observed_positions_90d": 894,
-      "realized_dd_30d": 0.5384,
-      "wallet_return_this_epoch": 0.004461,
-      "epochs_observed": 15,
-      "cumulative_return": 2.04613,
-      "win_rate": 0.4667,
-      "peak_dd_30d": 0.5384,
       "last_epoch": "2025-12-26 00:00:00+00:00"
     },
     {
@@ -525,20 +511,6 @@
       "last_epoch": "2025-12-26 00:00:00+00:00"
     },
     {
-      "wallet_address": "0xe67905b3e3d6a20541c60d4ec3dba87386718c5d",
-      "verdict": "EMERGENCY_UNWIND",
-      "label_score": 1.0,
-      "rolling_90d_sortino": 10.0,
-      "n_observed_positions_90d": 116,
-      "realized_dd_30d": 0.2365,
-      "wallet_return_this_epoch": 0.88332,
-      "epochs_observed": 18,
-      "cumulative_return": 3.283501,
-      "win_rate": 0.4444,
-      "peak_dd_30d": 0.2365,
-      "last_epoch": "2025-12-26 00:00:00+00:00"
-    },
-    {
       "wallet_address": "0x07ca54b301deca9c8bc9af4e4cd6a87531018031",
       "verdict": "ENTER",
       "label_score": 1.0,
@@ -550,20 +522,6 @@
       "cumulative_return": 0.965922,
       "win_rate": 0.48,
       "peak_dd_30d": 0.1324,
-      "last_epoch": "2025-12-26 00:00:00+00:00"
-    },
-    {
-      "wallet_address": "0x16064d4aa19bd06f7dc6579365cbb27f92857b2c",
-      "verdict": "EMERGENCY_UNWIND",
-      "label_score": 1.0,
-      "rolling_90d_sortino": 10.0,
-      "n_observed_positions_90d": 106,
-      "realized_dd_30d": 0.1505,
-      "wallet_return_this_epoch": -0.003796,
-      "epochs_observed": 17,
-      "cumulative_return": 4.710411,
-      "win_rate": 0.4706,
-      "peak_dd_30d": 0.1505,
       "last_epoch": "2025-12-26 00:00:00+00:00"
     },
     {
@@ -579,20 +537,6 @@
       "win_rate": 0.56,
       "peak_dd_30d": 0.1871,
       "last_epoch": "2025-12-26 00:00:00+00:00"
-    },
-    {
-      "wallet_address": "0xe8a14c3cb764f064805b0d5dfe4e8d70cafc7722",
-      "verdict": "ENTER",
-      "label_score": 1.0,
-      "rolling_90d_sortino": 10.0,
-      "n_observed_positions_90d": 99,
-      "realized_dd_30d": 0.0542,
-      "wallet_return_this_epoch": 0.0,
-      "epochs_observed": 18,
-      "cumulative_return": 1.565594,
-      "win_rate": 0.3889,
-      "peak_dd_30d": 0.0542,
-      "last_epoch": "2025-12-19 00:00:00+00:00"
     },
     {
       "wallet_address": "0xd389de95439c5fd2635b97fb986eed259cb79e0e",
@@ -620,20 +564,6 @@
       "cumulative_return": 5.030524,
       "win_rate": 0.56,
       "peak_dd_30d": 0.7782,
-      "last_epoch": "2025-12-26 00:00:00+00:00"
-    },
-    {
-      "wallet_address": "0x1df2fcf0b8c15e692ff9df5efc32506e6544d12d",
-      "verdict": "ENTER",
-      "label_score": 1.0,
-      "rolling_90d_sortino": 10.0,
-      "n_observed_positions_90d": 79,
-      "realized_dd_30d": 0.0607,
-      "wallet_return_this_epoch": 0.005109,
-      "epochs_observed": 15,
-      "cumulative_return": 1.658438,
-      "win_rate": 0.6,
-      "peak_dd_30d": 0.0607,
       "last_epoch": "2025-12-26 00:00:00+00:00"
     },
     {
@@ -719,9 +649,93 @@
       "win_rate": 0.4,
       "peak_dd_30d": 0.1634,
       "last_epoch": "2025-12-26 00:00:00+00:00"
+    },
+    {
+      "wallet_address": "0xc36acb716962ccdb62f0d8e02d293edcc6f26dcc",
+      "verdict": "ENTER",
+      "label_score": 1.0,
+      "rolling_90d_sortino": 10.0,
+      "n_observed_positions_90d": 63,
+      "realized_dd_30d": 0.0302,
+      "wallet_return_this_epoch": 0.004548,
+      "epochs_observed": 26,
+      "cumulative_return": 3.094166,
+      "win_rate": 0.3462,
+      "peak_dd_30d": 0.0302,
+      "last_epoch": "2025-12-26 00:00:00+00:00"
+    },
+    {
+      "wallet_address": "0xe3ec8563551f049da5fc973472a7fb04cb940d08",
+      "verdict": "ENTER",
+      "label_score": 1.0,
+      "rolling_90d_sortino": 10.0,
+      "n_observed_positions_90d": 61,
+      "realized_dd_30d": 0.002,
+      "wallet_return_this_epoch": -7.4e-05,
+      "epochs_observed": 25,
+      "cumulative_return": 0.617152,
+      "win_rate": 0.4,
+      "peak_dd_30d": 0.002,
+      "last_epoch": "2025-12-26 00:00:00+00:00"
+    },
+    {
+      "wallet_address": "0x64cfe79b038652bf46a887977285ed308aea37f3",
+      "verdict": "EMERGENCY_UNWIND",
+      "label_score": 1.0,
+      "rolling_90d_sortino": 10.0,
+      "n_observed_positions_90d": 60,
+      "realized_dd_30d": 0.1829,
+      "wallet_return_this_epoch": -0.004843,
+      "epochs_observed": 21,
+      "cumulative_return": 4.376496,
+      "win_rate": 0.5238,
+      "peak_dd_30d": 0.1829,
+      "last_epoch": "2025-12-26 00:00:00+00:00"
+    },
+    {
+      "wallet_address": "0xfe8fe2eaefda08bda5c887d1b5fc7d2efc3f7b90",
+      "verdict": "ENTER",
+      "label_score": 1.0,
+      "rolling_90d_sortino": 10.0,
+      "n_observed_positions_90d": 60,
+      "realized_dd_30d": 0.0213,
+      "wallet_return_this_epoch": 0.004006,
+      "epochs_observed": 25,
+      "cumulative_return": 19.196942,
+      "win_rate": 0.76,
+      "peak_dd_30d": 0.0213,
+      "last_epoch": "2025-12-26 00:00:00+00:00"
+    },
+    {
+      "wallet_address": "0xc87c3e5b8a5553176c1a088d7acbc05772851aed",
+      "verdict": "ENTER",
+      "label_score": 1.0,
+      "rolling_90d_sortino": 10.0,
+      "n_observed_positions_90d": 58,
+      "realized_dd_30d": 0.1192,
+      "wallet_return_this_epoch": 0.002805,
+      "epochs_observed": 25,
+      "cumulative_return": 3.81523,
+      "win_rate": 0.48,
+      "peak_dd_30d": 0.1192,
+      "last_epoch": "2025-12-26 00:00:00+00:00"
     }
   ],
   "anomalies": [
+    {
+      "wallet_address": "0x0000002261bc8dc9e707dcace9658bd8182645b4",
+      "verdict": "EMERGENCY_UNWIND",
+      "realized_dd_30d": 1.0,
+      "rolling_90d_sortino": 0.0,
+      "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
+    },
+    {
+      "wallet_address": "0x60b82538b8495ce3f96cc03ddfb750661158373d",
+      "verdict": "EMERGENCY_UNWIND",
+      "realized_dd_30d": 1.0,
+      "rolling_90d_sortino": 0.0,
+      "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
+    },
     {
       "wallet_address": "0x1322bb56ed2b4d4e4bf05347447de82ac831bd90",
       "verdict": "EMERGENCY_UNWIND",
@@ -765,21 +779,7 @@
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
-      "wallet_address": "0x0000002261bc8dc9e707dcace9658bd8182645b4",
-      "verdict": "EMERGENCY_UNWIND",
-      "realized_dd_30d": 1.0,
-      "rolling_90d_sortino": -9.5239,
-      "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
-    },
-    {
       "wallet_address": "0x464fc339add314932920d3e060745bd7ea3e92ad",
-      "verdict": "EMERGENCY_UNWIND",
-      "realized_dd_30d": 1.0,
-      "rolling_90d_sortino": -10.0,
-      "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
-    },
-    {
-      "wallet_address": "0x60b82538b8495ce3f96cc03ddfb750661158373d",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 1.0,
       "rolling_90d_sortino": -10.0,
@@ -797,6 +797,13 @@
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 1.0,
       "rolling_90d_sortino": -10.0,
+      "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
+    },
+    {
+      "wallet_address": "0xf34c3366f4af9f853fc6721b6d48b724d210928e",
+      "verdict": "EMERGENCY_UNWIND",
+      "realized_dd_30d": 0.9999,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -818,13 +825,6 @@
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.9999,
       "rolling_90d_sortino": -7.055,
-      "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
-    },
-    {
-      "wallet_address": "0xf34c3366f4af9f853fc6721b6d48b724d210928e",
-      "verdict": "EMERGENCY_UNWIND",
-      "realized_dd_30d": 0.9999,
-      "rolling_90d_sortino": -7.7996,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -957,7 +957,7 @@
       "wallet_address": "0xaa7392968fd98bac29acf992d6196a99bd31b63e",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.9587,
-      "rolling_90d_sortino": -0.9221,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -971,7 +971,7 @@
       "wallet_address": "0x06cf3e299a529c7c83e5260bd3729e5cacbd3fc5",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.9566,
-      "rolling_90d_sortino": -3.4653,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -1006,7 +1006,7 @@
       "wallet_address": "0xc359e97fbedd9bb5dc54bf79a87499b0126018c5",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.952,
-      "rolling_90d_sortino": -2.9777,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -1097,7 +1097,7 @@
       "wallet_address": "0x9e375d31a8d0ed88d0ede9c7a3f775965d9442f2",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.885,
-      "rolling_90d_sortino": -6.6261,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -1153,7 +1153,7 @@
       "wallet_address": "0x7fb1041931a8ca61a7607feb1500265bbd8f0434",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.6223,
-      "rolling_90d_sortino": -4.746,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -1195,7 +1195,7 @@
       "wallet_address": "0x62b4ffcc15802d337ecc4107c44aa5c8c44f2830",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.5384,
-      "rolling_90d_sortino": 10.0,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -1209,7 +1209,7 @@
       "wallet_address": "0xdb49d3c6d3d1637e7c6d912669351cfed6ce257c",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.5299,
-      "rolling_90d_sortino": -7.6361,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -1489,7 +1489,7 @@
       "wallet_address": "0xe67905b3e3d6a20541c60d4ec3dba87386718c5d",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.2365,
-      "rolling_90d_sortino": 10.0,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -1552,7 +1552,7 @@
       "wallet_address": "0x530fdff9da6f3053a71f4bddc9a3c5e8a1e48c1e",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.2021,
-      "rolling_90d_sortino": -7.8892,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -1692,7 +1692,7 @@
       "wallet_address": "0x16064d4aa19bd06f7dc6579365cbb27f92857b2c",
       "verdict": "EMERGENCY_UNWIND",
       "realized_dd_30d": 0.1505,
-      "rolling_90d_sortino": 10.0,
+      "rolling_90d_sortino": 0.0,
       "reason": "realized_dd_30d >= 0.15 (emergency-unwind trigger)"
     },
     {
@@ -1706,14 +1706,14 @@
       "wallet_address": "0x93d640f568771c4adeb06c0e85135d0873f50771",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.1381,
-      "rolling_90d_sortino": -5.9545,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
       "wallet_address": "0x2621848a0890fe6473063e2f9f5597786fa28c91",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.138,
-      "rolling_90d_sortino": -8.9499,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
@@ -1727,7 +1727,7 @@
       "wallet_address": "0x98325c702bdc6041e374677c93a91ea7e90e332d",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.1332,
-      "rolling_90d_sortino": -3.6207,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
@@ -1735,6 +1735,13 @@
       "verdict": "DEFUND",
       "realized_dd_30d": 0.1289,
       "rolling_90d_sortino": -4.6849,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x381fb95a4fa5e83367773bd512ed088210626f10",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.1271,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
@@ -1752,10 +1759,24 @@
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
+      "wallet_address": "0xb67cd5274b450e23e68874605affd4ec559a69e5",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.1166,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x5701a3ad2ee97e14753645a939f4bde7c1b1d3dd",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.1155,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
       "wallet_address": "0x72292f8183dad15dae55377321d29f1053d1603f",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.113,
-      "rolling_90d_sortino": -6.3427,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
@@ -1773,6 +1794,13 @@
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
+      "wallet_address": "0xfd33e0279c7dc0e46210af313040a8c5558b0e26",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.1071,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
       "wallet_address": "0x7121c58525134a1171e116cdaefae65cd0225851",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.1028,
@@ -1783,14 +1811,14 @@
       "wallet_address": "0xbeccb3b9600a3b603f6033359b73654dd2913587",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.097,
-      "rolling_90d_sortino": -2.5685,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
       "wallet_address": "0xd894965581a598c0b9df5babaca73e714359e8b6",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0894,
-      "rolling_90d_sortino": -8.9087,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
@@ -1811,14 +1839,21 @@
       "wallet_address": "0xae7038bb91f5e9319832e5bfb030f4d9bbc721ff",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0812,
-      "rolling_90d_sortino": -6.9035,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x8aa912cd934b13cb61fb4d6764841d37d04655da",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0778,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
       "wallet_address": "0xc8b19839ae371bd541f20b15c3a3cb82bfb6a6c6",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0748,
-      "rolling_90d_sortino": -6.0434,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
@@ -1832,28 +1867,56 @@
       "wallet_address": "0xf5d95ed1dd309de59552306cd7de3da5b4e2b119",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0651,
-      "rolling_90d_sortino": -6.121,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
       "wallet_address": "0x94c8702a7b3dcbb097c71cf5e5e39dcbe7eee72c",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0625,
-      "rolling_90d_sortino": -5.4316,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0xcaefc3ad6700e0c84366f331b9b0caffc9fb6109",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0622,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
       "wallet_address": "0xcc3601bef65d0e6465188c60baf867fc7eb109e6",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0619,
-      "rolling_90d_sortino": -5.807,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x1df2fcf0b8c15e692ff9df5efc32506e6544d12d",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0607,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x3cf240594175868177321856a65fdfb4d0fd2f1d",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0606,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0xe8a14c3cb764f064805b0d5dfe4e8d70cafc7722",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0542,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
       "wallet_address": "0x09e2918e0d97f9b55f6b89ead97561190d152fcf",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0537,
-      "rolling_90d_sortino": -4.0436,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
@@ -1874,20 +1937,55 @@
       "wallet_address": "0x9272227568d59326a9be3a2bebbc79c5eb2aff4a",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0457,
-      "rolling_90d_sortino": -3.625,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x498020622ca0d5de103b7e78e3efe5819d0d28ab",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0456,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0xc59dfc955c26493c3e5ac068a308cb787cce34e6",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.044,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
       "wallet_address": "0x9e61e3aedf6417c36d8d39bed3f70385791bdab2",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0413,
-      "rolling_90d_sortino": -3.6991,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x7e023e436904efb7b08f67c0edd7ce62fbacd7a5",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0383,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
       "wallet_address": "0xf9e8e6e5ba50a3b856862b2ae3f9a3d78286d75c",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0382,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x39afe2176de832be2a5164e5fc91e27d1355c88d",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0365,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x2e7fe8551847302a76c9c2201b7228fe382d8a82",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0325,
       "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
@@ -1899,7 +1997,28 @@
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
+      "wallet_address": "0x49a26f90509fe18441ac466ec9cb0467423f62ea",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.031,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
       "wallet_address": "0xc0efd9d4b3c7e1f4f8b700c0f939eda9a2b738da",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0307,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x6e726745b61c9c78b6259fc550f23490ce9f3a52",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0307,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x5db201ae15f9702f0a0ff9f00b8c1c18355373d0",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0307,
       "rolling_90d_sortino": 0.0,
@@ -1913,9 +2032,30 @@
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
+      "wallet_address": "0x06f98c244b18c50234690da51c1d9c144042373a",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0307,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
       "wallet_address": "0xe5350e927b904fdb4d2af55c566e269bb3df1941",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0306,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0xf241a59d695ce3ee2803b29a87423d554cd72cee",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0306,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x4a461f9da1250686139a7f4bee470472252b64cb",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0303,
       "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
@@ -1948,6 +2088,13 @@
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
+      "wallet_address": "0x368955efb1bf001683cb5f7ab223380caf0b86e5",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0198,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
       "wallet_address": "0xb82def35c814584d3d929cfb3a1fb1b886b6e57b",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0174,
@@ -1976,6 +2123,13 @@
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
+      "wallet_address": "0x58efe9aee1b12053f4c58233b75c319412cb0614",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.015,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
       "wallet_address": "0xa7a4e8c6f7f77b5a937d16c53c5f49fc399d49fb",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.011,
@@ -2000,7 +2154,7 @@
       "wallet_address": "0xa523a792db059a8b92b1628272877953b4ad052e",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0085,
-      "rolling_90d_sortino": -5.9352,
+      "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },
     {
@@ -2042,6 +2196,13 @@
       "wallet_address": "0x88744ac774ab4c9d92463a4bbfd97b7e50ab3473",
       "verdict": "DEFUND",
       "realized_dd_30d": 0.0008,
+      "rolling_90d_sortino": 0.0,
+      "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
+    },
+    {
+      "wallet_address": "0x6c5466effd3dcfd60b5dc1f180175247ca66ac6a",
+      "verdict": "DEFUND",
+      "realized_dd_30d": 0.0006,
       "rolling_90d_sortino": 0.0,
       "reason": "rolling_90d_sortino < 0.5 (sortino-decay defund)"
     },

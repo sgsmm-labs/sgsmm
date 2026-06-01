@@ -4,15 +4,18 @@ Sortino ratio computation for SGSMM eligibility gating.
 Reference policy (see docs-private/strategy-spec.md):
 - Rolling 90d window
 - MAR (Minimum Acceptable Return) = 0
-- Annualize by sqrt(8760) when working with hourly returns
-- Require minimum 20 observations for statistical significance
+- DAILY cadence: input is a per-wallet daily return series, annualized by
+  sqrt(365) (the per-day Sortino scaled to annual).
+- Require minimum 20 observations for statistical significance.
 
 The Sortino ratio differs from Sharpe by penalizing only downside volatility:
 
     Sortino = (mean_return - MAR) / downside_deviation
     downside_deviation = sqrt(mean(min(0, return - MAR)^2))
 
-For SGSMM the input series is per-wallet hourly return on tracked NAV.
+For SGSMM the input series is per-wallet DAILY return on tracked risky NAV
+(reconstructed by pnl.reconstruct_pnl). The hourly cadence is retained only as a
+generic annualization option; the SGSMM pipeline runs on daily returns.
 """
 
 from __future__ import annotations
@@ -39,6 +42,10 @@ def downside_deviation(returns: pd.Series, mar: float = 0.0) -> float:
     deviations = returns - mar
     negative_deviations = np.minimum(deviations, 0.0)
     sq = negative_deviations**2
+    # Full-N (target-semideviation) convention: divide by the total observation
+    # count, not just the count of below-MAR returns. This is intentional — it is
+    # the standard Sortino denominator and keeps upside days from inflating the
+    # ratio by shrinking the divisor.
     mean_sq = sq.mean()
     if mean_sq == 0:
         return float("nan")  # all returns >= MAR, downside undefined
